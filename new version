@@ -3581,7 +3581,7 @@ G2L["183"]["Size"] = UDim2.new(0.11629, 0, 0.059, 0);
 G2L["183"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["183"]["Text"] = [[ESP-OFF]];
 G2L["183"]["Name"] = [[es]];
-G2L["183"]["Position"] = UDim2.new(0.17865, 0, 0.42897, 0);
+G2L["183"]["Position"] = UDim2.new(0.1771, 0, 0.42696, 0);
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs.es.LocalScript
@@ -3622,7 +3622,7 @@ G2L["188"]["Size"] = UDim2.new(0.11574, 0, 0.059, 0);
 G2L["188"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["188"]["Text"] = [[TeamCheck-ON]];
 G2L["188"]["Name"] = [[tmchkwh]];
-G2L["188"]["Position"] = UDim2.new(0.17893, 0, 0.5, 0);
+G2L["188"]["Position"] = UDim2.new(0.17582, 0, 0.5, 0);
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs.tmchkwh.aa
@@ -3658,7 +3658,7 @@ G2L["18c"]["Size"] = UDim2.new(0.11703, 0, 0.059, 0);
 G2L["18c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["18c"]["Text"] = [[Tracers-OFF]];
 G2L["18c"]["Name"] = [[trs]];
-G2L["18c"]["Position"] = UDim2.new(0.30485, 0, 0.42784, 0);
+G2L["18c"]["Position"] = UDim2.new(0.3002, 0, 0.42583, 0);
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs.trs.LocalScript
@@ -3699,7 +3699,7 @@ G2L["191"]["Size"] = UDim2.new(0.1171, 0, 0.059, 0);
 G2L["191"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["191"]["Text"] = [[RGB-OFF]];
 G2L["191"]["Name"] = [[rnbw]];
-G2L["191"]["Position"] = UDim2.new(0.30482, 0, 0.4995, 0);
+G2L["191"]["Position"] = UDim2.new(0.30172, 0, 0.4995, 0);
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs.rnbw.aa
@@ -5422,7 +5422,7 @@ local script = G2L["1b"];
 	
 	-- NASTAVENÍ PŘI JOINU
 	local menuOpen = true 
-	local lockEnabled = true -- true = Myš se nezamyká/neodmyká (zůstane locknutá)
+	local lockEnabled = false -- true = Myš se nezamyká/neodmyká (zůstane locknutá)
 	
 	mainFrame.Visible = menuOpen
 	
@@ -5443,7 +5443,7 @@ local script = G2L["1b"];
 	local modalButton = setupModal()
 	
 	local function updateToggleButtonUI()
-		lobut.Text = lockEnabled and "Mouse Lock: ON" or "Mouse Lock: OFF"
+		lobut.Text = lockEnabled and "Mouse Lock-ON" or "Mouse Lock-OFF"
 	end
 	
 	local function updateMouseBehavior()
@@ -8316,11 +8316,9 @@ local script = G2L["184"];
 	local espButton = script.Parent
 	local gui = espButton.Parent
 	
-	-- Button References
 	local trsButton = gui:FindFirstChild("trs")
 	local tmchkButton = gui:FindFirstChild("tmchkwh")
 	local rnbwButton = gui:FindFirstChild("rnbw")
-	local esOutButton = gui:FindFirstChild("EsOut") 
 	
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
@@ -8341,7 +8339,6 @@ local script = G2L["184"];
 	espScreenGui.Parent = playerGui
 	espScreenGui.ResetOnSpawn = false
 	espScreenGui.IgnoreGuiInset = true
-	espScreenGui.Enabled = true
 	
 	LocalPlayer.CharacterAdded:Connect(function()
 		localAttach = nil
@@ -8378,7 +8375,6 @@ local script = G2L["184"];
 	
 		local function setup(character)
 			if not character then return end
-	
 			local root = character:WaitForChild("HumanoidRootPart", 10)
 			local humanoid = character:WaitForChild("Humanoid", 10)
 			if not root or not humanoid then return end
@@ -8386,10 +8382,8 @@ local script = G2L["184"];
 			destroyESP(player)
 	
 			local boxFrame = Instance.new("Frame")
-			boxFrame.Name = "ESPBox"
 			boxFrame.BackgroundTransparency = 1
 			boxFrame.BorderSizePixel = 0
-			boxFrame.ZIndex = 5
 			boxFrame.Visible = false
 			boxFrame.Parent = espScreenGui
 	
@@ -8398,46 +8392,40 @@ local script = G2L["184"];
 			uistroke.Parent = boxFrame
 	
 			local uicorner = Instance.new("UICorner")
-			uicorner.CornerRadius = UDim.new(0.02, 0)
+			uicorner.CornerRadius = UDim.new(0, 4)
 			uicorner.Parent = boxFrame
 	
-			local nameLabel2D = Instance.new("TextLabel")
-			nameLabel2D.Name = "NameLabel"
-			nameLabel2D.BackgroundTransparency = 1
-			nameLabel2D.Size = UDim2.fromOffset(200, 18)
-			nameLabel2D.TextScaled = true
-			nameLabel2D.TextStrokeTransparency = 0.6
-			nameLabel2D.Font = Enum.Font.MontserratBold
-			nameLabel2D.ZIndex = 6
-			nameLabel2D.AnchorPoint = Vector2.new(0.5, 1)
-			nameLabel2D.Visible = false
-			nameLabel2D.Parent = espScreenGui
-			nameLabel2D.Text = player.Name
+			local nameLabel = Instance.new("TextLabel")
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.Size = UDim2.fromOffset(200, 18)
+			nameLabel.TextScaled = true
+			nameLabel.TextStrokeTransparency = 0.6
+			nameLabel.Font = Enum.Font.MontserratBold
+			nameLabel.AnchorPoint = Vector2.new(0.5, 1)
+			nameLabel.Visible = false
+			nameLabel.Parent = espScreenGui
+			nameLabel.Text = player.Name
 	
-			local distLabel2D = Instance.new("TextLabel")
-			distLabel2D.Name = "DistLabel"
-			distLabel2D.BackgroundTransparency = 1
-			distLabel2D.Size = UDim2.fromOffset(200, 22)
-			distLabel2D.TextScaled = true
-			distLabel2D.TextStrokeTransparency = 0.6
-			distLabel2D.Font = Enum.Font.Montserrat
-			distLabel2D.ZIndex = 6
-			distLabel2D.AnchorPoint = Vector2.new(0.5, 0)
-			distLabel2D.Visible = false
-			distLabel2D.Parent = espScreenGui
+			local distLabel = Instance.new("TextLabel")
+			distLabel.BackgroundTransparency = 1
+			distLabel.Size = UDim2.fromOffset(200, 22)
+			distLabel.TextScaled = true
+			distLabel.TextStrokeTransparency = 0.6
+			distLabel.Font = Enum.Font.Montserrat
+			distLabel.AnchorPoint = Vector2.new(0.5, 0)
+			distLabel.Visible = false
+			distLabel.Parent = espScreenGui
 	
-			local healthFrame2D = Instance.new("Frame")
-			healthFrame2D.Name = "HealthFrame"
-			healthFrame2D.BackgroundTransparency = 1
-			healthFrame2D.Visible = false
-			healthFrame2D.Parent = espScreenGui
+			local healthFrame = Instance.new("Frame")
+			healthFrame.BackgroundTransparency = 1
+			healthFrame.Visible = false
+			healthFrame.Parent = espScreenGui
 	
 			local healthBack = Instance.new("Frame")
 			healthBack.BackgroundColor3 = Color3.new(0, 0, 0)
-			healthBack.BackgroundTransparency = 0.5
 			healthBack.BorderSizePixel = 0
 			healthBack.Size = UDim2.new(1, 0, 1, 0)
-			healthBack.Parent = healthFrame2D
+			healthBack.Parent = healthFrame
 	
 			local healthBar = Instance.new("Frame")
 			healthBar.BorderSizePixel = 0
@@ -8452,26 +8440,21 @@ local script = G2L["184"];
 			highlight.Enabled = false
 			highlight.Parent = workspace
 	
-			local attach1 = Instance.new("Attachment")
-			attach1.Name = "TracerAttach1"
-			attach1.Parent = root
-	
 			local beam = Instance.new("Beam")
-			beam.Attachment1 = attach1
 			beam.FaceCamera = true
 			beam.Enabled = false
 			beam.Width0 = 0.2
 			beam.Width1 = 0.2
-			beam.LightEmission = 1 -- Max value is 1
+			beam.LightEmission = 1
+			beam.Transparency = NumberSequence.new(0.3)
 			beam.Parent = workspace
-			beam.Transparency = NumberSequence.new(0.3) -- Slightly transparent tracer
 	
 			espObjects[player] = {
 				boxFrame = boxFrame,
 				uistroke = uistroke,
-				nameLabel2D = nameLabel2D,
-				distLabel2D = distLabel2D,
-				healthFrame2D = healthFrame2D,
+				nameLabel = nameLabel,
+				distLabel = distLabel,
+				healthFrame = healthFrame,
 				healthBar = healthBar,
 				highlight = highlight,
 				beam = beam,
@@ -8489,7 +8472,7 @@ local script = G2L["184"];
 	Players.PlayerAdded:Connect(addESP)
 	Players.PlayerRemoving:Connect(destroyESP)
 	
-	-- Toggle Logic
+	-- Toggles
 	espButton.MouseButton1Click:Connect(function()
 		espEnabled = not espEnabled
 		espButton.Text = espEnabled and "ESP-ON" or "ESP-OFF"
@@ -8520,8 +8503,6 @@ local script = G2L["184"];
 		local localChar = LocalPlayer.Character
 		local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
 		local localAttachNow = getLocalAttach()
-	
-		-- Global Rainbow Hue
 		local hue = tick() % 5 / 5
 		local rainbowColor = Color3.fromHSV(hue, 1, 1)
 	
@@ -8532,9 +8513,9 @@ local script = G2L["184"];
 	
 			if not char or not char.Parent or not root or not root.Parent or not humanoid or humanoid.Health <= 0 then
 				obj.boxFrame.Visible = false
-				obj.nameLabel2D.Visible = false
-				obj.distLabel2D.Visible = false
-				obj.healthFrame2D.Visible = false
+				obj.nameLabel.Visible = false
+				obj.distLabel.Visible = false
+				obj.healthFrame.Visible = false
 				obj.highlight.Enabled = false
 				obj.beam.Enabled = false
 				continue
@@ -8544,81 +8525,67 @@ local script = G2L["184"];
 			local shouldShow = espEnabled and not onTeam
 			local shouldShowTracer = tracersEnabled and not onTeam
 	
-			-- DYNAMIC COLOR LOGIC
-			local activeColor
-			if rainbowEnabled then
-				activeColor = rainbowColor
-			else
-				-- If they have a team, use TeamColor. Otherwise, use your Dark Red.
-				activeColor = player.TeamColor and player.TeamColor.Color or Color3.fromRGB(150, 0, 0)
-			end
+			-- Color Logic
+			local activeColor = rainbowEnabled and rainbowColor or (player.TeamColor and player.TeamColor.Color or Color3.fromRGB(150, 0, 0))
 	
-			-- Apply Color to all elements
-			obj.uistroke.Color = activeColor
-			obj.nameLabel2D.TextColor3 = activeColor
-			obj.distLabel2D.TextColor3 = activeColor
-			obj.healthBar.BackgroundColor3 = activeColor
-			obj.highlight.FillColor = activeColor
-			obj.highlight.OutlineColor = activeColor
+			if shouldShow then
+				-- Calculate 3D to 2D screen positions based on FOV
+				local cf, size = char:GetBoundingBox()
+				local screenPos, onScreen = camera:WorldToViewportPoint(cf.Position)
+	
+				if onScreen then
+					-- Get accurate Box size relative to camera distance and FOV
+					local sizeX = size.X
+					local sizeY = size.Y
+	
+					-- Adjust for character scale
+					local top = camera:WorldToViewportPoint((cf * CFrame.new(0, sizeY/2, 0)).Position)
+					local bottom = camera:WorldToViewportPoint((cf * CFrame.new(0, -sizeY/2, 0)).Position)
+					local left = camera:WorldToViewportPoint((cf * CFrame.new(-sizeX/2, 0, 0)).Position)
+					local right = camera:WorldToViewportPoint((cf * CFrame.new(sizeX/2, 0, 0)).Position)
+	
+					local width = math.abs(right.X - left.X)
+					local height = math.abs(bottom.Y - top.Y)
+	
+					obj.boxFrame.Size = UDim2.fromOffset(width + 4, height + 4)
+					obj.boxFrame.Position = UDim2.fromOffset(screenPos.X - (width/2) - 2, screenPos.Y - (height/2) - 2)
+					obj.boxFrame.Visible = true
+					obj.uistroke.Color = activeColor
+	
+					obj.nameLabel.Position = UDim2.fromOffset(screenPos.X, screenPos.Y - (height/2) - 15)
+					obj.nameLabel.TextColor3 = activeColor
+					obj.nameLabel.Visible = true
+	
+					local dist = localRoot and math.floor((root.Position - localRoot.Position).Magnitude) or 0
+					obj.distLabel.Position = UDim2.fromOffset(screenPos.X, screenPos.Y + (height/2) + 5)
+					obj.distLabel.Text = dist .. " studs"
+					obj.distLabel.TextColor3 = activeColor
+					obj.distLabel.Visible = true
+	
+					obj.healthFrame.Position = UDim2.fromOffset(screenPos.X + (width/2) + 6, screenPos.Y - (height/2) - 2)
+					obj.healthFrame.Size = UDim2.fromOffset(3, height + 4)
+					obj.healthFrame.Visible = true
+					obj.healthBar.Size = UDim2.new(1, 0, humanoid.Health / humanoid.MaxHealth, 0)
+					obj.healthBar.BackgroundColor3 = activeColor
+	
+					obj.highlight.FillColor = activeColor
+					obj.highlight.OutlineColor = activeColor
+					obj.highlight.Enabled = true
+				else
+					obj.boxFrame.Visible, obj.nameLabel.Visible, obj.distLabel.Visible, obj.healthFrame.Visible, obj.highlight.Enabled = false, false, false, false, false
+				end
+			else
+				obj.boxFrame.Visible, obj.nameLabel.Visible, obj.distLabel.Visible, obj.healthFrame.Visible, obj.highlight.Enabled = false, false, false, false, false
+			end
 	
 			-- Tracer update
 			if shouldShowTracer and localAttachNow and root then
 				obj.beam.Attachment0 = localAttachNow
+				obj.beam.Attachment1 = root:FindFirstChild("TracerAttach1")
 				obj.beam.Color = ColorSequence.new(activeColor)
 				obj.beam.Enabled = true
 			else
 				obj.beam.Enabled = false
-			end
-	
-			-- ESP update
-			if shouldShow then
-				local _, onScreen = camera:WorldToViewportPoint(root.Position)
-	
-				if onScreen then
-					local cframe, bsize = char:GetBoundingBox()
-					local hx, hy, hz = bsize.X/2, bsize.Y/2, bsize.Z/2
-					local points = {
-						cframe * Vector3.new(hx,hy,hz), cframe * Vector3.new(-hx,hy,hz),
-						cframe * Vector3.new(hx,hy,-hz), cframe * Vector3.new(-hx,hy,-hz),
-						cframe * Vector3.new(hx,-hy,hz), cframe * Vector3.new(-hx,-hy,hz),
-						cframe * Vector3.new(hx,-hy,-hz), cframe * Vector3.new(-hx,-hy,-hz)
-					}
-	
-					local minX, maxX = math.huge, -math.huge
-					local minY, maxY = math.huge, -math.huge
-	
-					for _, p in ipairs(points) do
-						local v = camera:WorldToViewportPoint(p)
-						minX, maxX = math.min(minX, v.X), math.max(maxX, v.X)
-						minY, maxY = math.min(minY, v.Y), math.max(maxY, v.Y)
-					end
-	
-					local w, h = (maxX - minX), (maxY - minY)
-					local cx = (minX + maxX)/2
-	
-					obj.boxFrame.Position = UDim2.fromOffset(minX, minY)
-					obj.boxFrame.Size = UDim2.fromOffset(w, h)
-					obj.boxFrame.Visible = true
-	
-					obj.nameLabel2D.Position = UDim2.fromOffset(cx, minY - 15)
-					obj.nameLabel2D.Visible = true
-	
-					local dist = math.floor((root.Position - localRoot.Position).Magnitude)
-					obj.distLabel2D.Position = UDim2.fromOffset(cx, maxY + 5)
-					obj.distLabel2D.Text = dist .. " studs"
-					obj.distLabel2D.Visible = true
-	
-					obj.healthFrame2D.Position = UDim2.fromOffset(maxX + 5, minY)
-					obj.healthFrame2D.Size = UDim2.fromOffset(3, h)
-					obj.healthFrame2D.Visible = true
-					obj.healthBar.Size = UDim2.new(1, 0, humanoid.Health / humanoid.MaxHealth, 0)
-	
-					obj.highlight.Enabled = true
-				else
-					obj.boxFrame.Visible, obj.nameLabel2D.Visible, obj.distLabel2D.Visible, obj.healthFrame2D.Visible, obj.highlight.Enabled = false, false, false, false, false
-				end
-			else
-				obj.boxFrame.Visible, obj.nameLabel2D.Visible, obj.distLabel2D.Visible, obj.healthFrame2D.Visible, obj.highlight.Enabled = false, false, false, false, false
 			end
 		end
 	end)
