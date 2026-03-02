@@ -8400,7 +8400,7 @@ local script = G2L["184"];
 			local uicorner = Instance.new("UICorner")
 			uicorner.CornerRadius = UDim.new(0.02, 0)
 			uicorner.Parent = boxFrame
-			
+	
 			local nameLabel2D = Instance.new("TextLabel")
 			nameLabel2D.Name = "NameLabel"
 			nameLabel2D.BackgroundTransparency = 1
@@ -8462,10 +8462,10 @@ local script = G2L["184"];
 			beam.Enabled = false
 			beam.Width0 = 0.2
 			beam.Width1 = 0.2
-			beam.LightEmission = 15
+			beam.LightEmission = 1 -- Max value is 1
 			beam.Parent = workspace
-			beam.Transparency = NumberSequence.new(0)
-			
+			beam.Transparency = NumberSequence.new(0.3) -- Slightly transparent tracer
+	
 			espObjects[player] = {
 				boxFrame = boxFrame,
 				uistroke = uistroke,
@@ -8489,7 +8489,7 @@ local script = G2L["184"];
 	Players.PlayerAdded:Connect(addESP)
 	Players.PlayerRemoving:Connect(destroyESP)
 	
-	-- Toggle Logic with New Text Naming
+	-- Toggle Logic
 	espButton.MouseButton1Click:Connect(function()
 		espEnabled = not espEnabled
 		espButton.Text = espEnabled and "ESP-ON" or "ESP-OFF"
@@ -8521,14 +8521,9 @@ local script = G2L["184"];
 		local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
 		local localAttachNow = getLocalAttach()
 	
-		-- COLOR LOGIC: RGB(27, 27, 27) when OFF
-		local activeColor
-		if rainbowEnabled then
-			local hue = tick() % 5 / 5
-			activeColor = Color3.fromHSV(hue, 1, 1)
-		else
-			activeColor = Color3.fromRGB(150, 0, 0)
-		end
+		-- Global Rainbow Hue
+		local hue = tick() % 5 / 5
+		local rainbowColor = Color3.fromHSV(hue, 1, 1)
 	
 		for player, obj in pairs(espObjects) do
 			local char = obj.character
@@ -8549,7 +8544,16 @@ local script = G2L["184"];
 			local shouldShow = espEnabled and not onTeam
 			local shouldShowTracer = tracersEnabled and not onTeam
 	
-			-- Apply Color
+			-- DYNAMIC COLOR LOGIC
+			local activeColor
+			if rainbowEnabled then
+				activeColor = rainbowColor
+			else
+				-- If they have a team, use TeamColor. Otherwise, use your Dark Red.
+				activeColor = player.TeamColor and player.TeamColor.Color or Color3.fromRGB(150, 0, 0)
+			end
+	
+			-- Apply Color to all elements
 			obj.uistroke.Color = activeColor
 			obj.nameLabel2D.TextColor3 = activeColor
 			obj.distLabel2D.TextColor3 = activeColor
