@@ -7,7 +7,7 @@
  Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  CONVERTER 
 ]=]
 
--- Instances: 534 | Scripts: 125 | Modules: 0 | Tags: 0
+-- Instances: 533 | Scripts: 125 | Modules: 0 | Tags: 0
 local G2L = {};
 
 -- StarterGui.HHHHAAAACCCCKKKK
@@ -270,6 +270,7 @@ G2L["21"]["BackgroundTransparency"] = 1;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Mu.CusSon
 G2L["22"] = Instance.new("TextBox", G2L["21"]);
 G2L["22"]["Name"] = [[CusSon]];
+G2L["22"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["22"]["ZIndex"] = 4;
 G2L["22"]["BorderSizePixel"] = 0;
 G2L["22"]["TextWrapped"] = true;
@@ -301,6 +302,7 @@ G2L["24"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Mu.Spad
 G2L["25"] = Instance.new("TextBox", G2L["21"]);
 G2L["25"]["Name"] = [[Spad]];
+G2L["25"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["25"]["ZIndex"] = 4;
 G2L["25"]["BorderSizePixel"] = 0;
 G2L["25"]["TextWrapped"] = true;
@@ -332,6 +334,7 @@ G2L["27"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Mu.Vol
 G2L["28"] = Instance.new("TextBox", G2L["21"]);
 G2L["28"]["Name"] = [[Vol]];
+G2L["28"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["28"]["ZIndex"] = 4;
 G2L["28"]["BorderSizePixel"] = 0;
 G2L["28"]["TextWrapped"] = true;
@@ -1331,6 +1334,7 @@ G2L["91"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.FlSped
 G2L["92"] = Instance.new("TextBox", G2L["59"]);
 G2L["92"]["Name"] = [[FlSped]];
+G2L["92"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["92"]["ZIndex"] = 4;
 G2L["92"]["BorderSizePixel"] = 0;
 G2L["92"]["TextWrapped"] = true;
@@ -1367,6 +1371,7 @@ G2L["95"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.Gravitttttty
 G2L["96"] = Instance.new("TextBox", G2L["59"]);
 G2L["96"]["Name"] = [[Gravitttttty]];
+G2L["96"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["96"]["ZIndex"] = 3;
 G2L["96"]["BorderSizePixel"] = 0;
 G2L["96"]["TextWrapped"] = true;
@@ -1403,6 +1408,7 @@ G2L["99"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.JumpHeiigggt
 G2L["9a"] = Instance.new("TextBox", G2L["59"]);
 G2L["9a"]["Name"] = [[JumpHeiigggt]];
+G2L["9a"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["9a"]["ZIndex"] = 4;
 G2L["9a"]["BorderSizePixel"] = 0;
 G2L["9a"]["TextWrapped"] = true;
@@ -1439,6 +1445,7 @@ G2L["9d"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.JumpPowweeer
 G2L["9e"] = Instance.new("TextBox", G2L["59"]);
 G2L["9e"]["Name"] = [[JumpPowweeer]];
+G2L["9e"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["9e"]["ZIndex"] = 4;
 G2L["9e"]["BorderSizePixel"] = 0;
 G2L["9e"]["TextWrapped"] = true;
@@ -1475,6 +1482,7 @@ G2L["a1"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.Speeed
 G2L["a2"] = Instance.new("TextBox", G2L["59"]);
 G2L["a2"]["Name"] = [[Speeed]];
+G2L["a2"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["a2"]["ZIndex"] = 4;
 G2L["a2"]["BorderSizePixel"] = 0;
 G2L["a2"]["TextWrapped"] = true;
@@ -1511,6 +1519,7 @@ G2L["a5"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.SpnSPED
 G2L["a6"] = Instance.new("TextBox", G2L["59"]);
 G2L["a6"]["Name"] = [[SpnSPED]];
+G2L["a6"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["a6"]["ZIndex"] = 4;
 G2L["a6"]["BorderSizePixel"] = 0;
 G2L["a6"]["TextWrapped"] = true;
@@ -2533,6 +2542,7 @@ G2L["118"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.FV
 G2L["119"] = Instance.new("TextBox", G2L["59"]);
 G2L["119"]["Name"] = [[FV]];
+G2L["119"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["119"]["ZIndex"] = 4;
 G2L["119"]["BorderSizePixel"] = 0;
 G2L["119"]["TextWrapped"] = true;
@@ -2774,6 +2784,7 @@ G2L["135"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.TpUp
 G2L["136"] = Instance.new("TextBox", G2L["59"]);
 G2L["136"]["Name"] = [[TpUp]];
+G2L["136"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["136"]["ZIndex"] = 3;
 G2L["136"]["BorderSizePixel"] = 0;
 G2L["136"]["TextWrapped"] = true;
@@ -2922,6 +2933,7 @@ G2L["13f"]["Position"] = UDim2.new(0.4447, 0, 0.00152, 0);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.pos
 G2L["140"] = Instance.new("TextBox", G2L["59"]);
 G2L["140"]["Name"] = [[pos]];
+G2L["140"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["140"]["ZIndex"] = 5;
 G2L["140"]["BorderSizePixel"] = 0;
 G2L["140"]["TextWrapped"] = true;
@@ -3105,6 +3117,7 @@ G2L["152"]["Name"] = [[scal]];
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Rg.CrosHaCol
 G2L["153"] = Instance.new("TextBox", G2L["151"]);
 G2L["153"]["Name"] = [[CrosHaCol]];
+G2L["153"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["153"]["ZIndex"] = 4;
 G2L["153"]["BorderSizePixel"] = 0;
 G2L["153"]["TextWrapped"] = true;
@@ -4866,11 +4879,6 @@ G2L["214"]["Position"] = UDim2.new(0.2732, 0, 0.10256, 0);
 G2L["215"] = Instance.new("UIStroke", G2L["20d"]);
 G2L["215"]["Transparency"] = 0.65;
 G2L["215"]["Thickness"] = 1.6;
-
-
--- StarterGui.HHHHAAAACCCCKKKK.Value
-G2L["216"] = Instance.new("IntValue", G2L["1"]);
-
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI5.LocalScript
@@ -8890,19 +8898,10 @@ task.spawn(C_1a1);
 local function C_1a3()
 local script = G2L["1a3"];
 	local btn = script.Parent
-	-- We look up the tree to find the ScreenGui
-	local gui = btn:FindFirstAncestorOfClass("ScreenGui")
-	-- Find the BoolValue we just made
-	local isClosing = gui:WaitForChild("IsClosing")
+	
+	local gui = game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK")
 	
 	btn.Activated:Connect(function()
-		-- 1. Tell the Watcher "This is on purpose!"
-		isClosing.Value = true
-	
-		-- 2. Give the engine a tiny moment to process the change
-		task.wait(0.05)
-	
-		-- 3. Destroy the GUI
 		gui:Destroy()
 	end)
 end;
@@ -9351,7 +9350,7 @@ local script = G2L["1be"];
 		gui5.grs.Visible = true
 		main.GUI12.Visible = false
 		root.BackgroundTransparency = 0
-		root.BackgroundColor3 = Color3.fromRGB(67, 67, 67)
+		root.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	
 		-- 3. HROMADNÉ BARVENÍ PANELŮ (S tvými specifickými barvami)
 		local darkPanels = {main.Parent.Bar, main.Gu.thm.shw, main.barr}
@@ -9424,11 +9423,11 @@ local script = G2L["1c6"];
 	
 	but.Activated:Connect(function()
 		u = not u
-		if u == true then
-			gui.Visible = true
+		if u then
+			gui.Visible = u
 			but.Text = "↑"
 		else
-			gui.Visible = false
+			gui.Visible = u
 			but.Text = "↓"
 		end
 	end)
