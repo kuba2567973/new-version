@@ -7746,7 +7746,7 @@ local script = G2L["158"];
 	
 	local auraEnabled = false
 	local teamCheckEnabled = true
-	local killDelay = 0.1 -- V Trench War doporučuji mírně pomalejší interval kvůli anticheatu
+	local killDelay = 0.005 -- V Trench War doporučuji mírně pomalejší interval kvůli anticheatu
 	
 	-- 1. FILTRACE CÍLŮ
 	local function canAttack(player)
@@ -8400,12 +8400,12 @@ local script = G2L["184"];
 			uistroke.Parent = boxFrame
 	
 			local uicorner = Instance.new("UICorner")
-			uicorner.CornerRadius = UDim.new(0, 4)
+			uicorner.CornerRadius = UDim.new(0.1, 0)
 			uicorner.Parent = boxFrame
 	
 			local nameLabel = Instance.new("TextLabel")
 			nameLabel.BackgroundTransparency = 1
-			nameLabel.Size = UDim2.fromOffset(200, 18)
+			nameLabel.Size = UDim2.new(0.175, 0, 0.026, 0)
 			nameLabel.TextScaled = true
 			nameLabel.TextStrokeTransparency = 0.6
 			nameLabel.Font = Enum.Font.MontserratBold
@@ -8416,7 +8416,7 @@ local script = G2L["184"];
 	
 			local distLabel = Instance.new("TextLabel")
 			distLabel.BackgroundTransparency = 1
-			distLabel.Size = UDim2.fromOffset(200, 22)
+			distLabel.Size = UDim2.new(0.175, 0, 0.032, 0)
 			distLabel.TextScaled = true
 			distLabel.TextStrokeTransparency = 0.6
 			distLabel.Font = Enum.Font.Montserrat
