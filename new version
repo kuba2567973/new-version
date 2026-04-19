@@ -8049,9 +8049,9 @@ task.spawn(C_173);
 local function C_177()
 local script = G2L["177"];
 	-- This script should be placed inside the "es" button as a LocalScript
+	
 	local espButton = script.Parent
 	local gui = espButton.Parent
-	
 	local trsButton = gui:FindFirstChild("trs")
 	local tmchkButton = gui:FindFirstChild("tmchkwh")
 	local rnbwButton = gui:FindFirstChild("rnbw")
@@ -8086,7 +8086,6 @@ local script = G2L["177"];
 		if not char then return nil end
 		local root = char:FindFirstChild("HumanoidRootPart")
 		if not root then return nil end
-	
 		local attach = root:FindFirstChild("TracerAttach0")
 		if not attach then
 			attach = Instance.new("Attachment")
@@ -8100,7 +8099,9 @@ local script = G2L["177"];
 	local function destroyESP(player)
 		if espObjects[player] then
 			for _, item in pairs(espObjects[player]) do
-				if item and typeof(item) == "Instance" then item:Destroy() end
+				if item and typeof(item) == "Instance" then 
+					item:Destroy() 
+				end
 			end
 			espObjects[player] = nil
 		end
@@ -8117,6 +8118,7 @@ local script = G2L["177"];
 	
 			destroyESP(player)
 	
+			-- Box, Health, Highlight, Beam
 			local boxFrame = Instance.new("Frame")
 			boxFrame.BackgroundTransparency = 1
 			boxFrame.BorderSizePixel = 0
@@ -8128,14 +8130,16 @@ local script = G2L["177"];
 			uistroke.Parent = boxFrame
 	
 			local uicorner = Instance.new("UICorner")
-			uicorner.CornerRadius = UDim.new(0.1, 0)
+			uicorner.CornerRadius = UDim.new(0.05, 0)
 			uicorner.Parent = boxFrame
 	
+			-- Name and Dist Labels (kept as screen-space like your original)
 			local nameLabel = Instance.new("TextLabel")
 			nameLabel.BackgroundTransparency = 1
-			nameLabel.Size = UDim2.new(0.175, 0, 0.026, 0)
-			nameLabel.TextScaled = true
-			nameLabel.TextStrokeTransparency = 0.6
+			nameLabel.TextScaled = false
+			nameLabel.TextSize = 18
+			nameLabel.TextStrokeTransparency = 0
+			nameLabel.TextStrokeColor3 = Color3.fromRGB()
 			nameLabel.Font = Enum.Font.MontserratBold
 			nameLabel.AnchorPoint = Vector2.new(0.5, 1)
 			nameLabel.Visible = false
@@ -8144,10 +8148,11 @@ local script = G2L["177"];
 	
 			local distLabel = Instance.new("TextLabel")
 			distLabel.BackgroundTransparency = 1
-			distLabel.Size = UDim2.new(0.175, 0, 0.032, 0)
-			distLabel.TextScaled = true
-			distLabel.TextStrokeTransparency = 0.6
-			distLabel.Font = Enum.Font.Montserrat
+			distLabel.TextScaled = false
+			distLabel.TextSize = 18
+			distLabel.TextStrokeTransparency = 0
+			distLabel.TextStrokeColor3 = Color3.fromRGB()
+			distLabel.Font = Enum.Font.MontserratBold
 			distLabel.AnchorPoint = Vector2.new(0.5, 0)
 			distLabel.Visible = false
 			distLabel.Parent = espScreenGui
@@ -8184,6 +8189,14 @@ local script = G2L["177"];
 			beam.LightEmission = 1
 			beam.Transparency = NumberSequence.new(0.3)
 			beam.Parent = workspace
+	
+			-- Create TracerAttach1 (this fixes tracers)
+			local tracerAttach1 = root:FindFirstChild("TracerAttach1")
+			if not tracerAttach1 then
+				tracerAttach1 = Instance.new("Attachment")
+				tracerAttach1.Name = "TracerAttach1"
+				tracerAttach1.Parent = root
+			end
 	
 			espObjects[player] = {
 				boxFrame = boxFrame,
@@ -8239,6 +8252,7 @@ local script = G2L["177"];
 		local localChar = LocalPlayer.Character
 		local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
 		local localAttachNow = getLocalAttach()
+	
 		local hue = tick() % 5 / 5
 		local rainbowColor = Color3.fromHSV(hue, 1, 1)
 	
@@ -8261,20 +8275,16 @@ local script = G2L["177"];
 			local shouldShow = espEnabled and not onTeam
 			local shouldShowTracer = tracersEnabled and not onTeam
 	
-			-- Color Logic
 			local activeColor = rainbowEnabled and rainbowColor or (player.TeamColor and player.TeamColor.Color or Color3.fromRGB(150, 0, 0))
 	
 			if shouldShow then
-				-- Calculate 3D to 2D screen positions based on FOV
 				local cf, size = char:GetBoundingBox()
 				local screenPos, onScreen = camera:WorldToViewportPoint(cf.Position)
 	
 				if onScreen then
-					-- Get accurate Box size relative to camera distance and FOV
 					local sizeX = size.X
 					local sizeY = size.Y
 	
-					-- Adjust for character scale
 					local top = camera:WorldToViewportPoint((cf * CFrame.new(0, sizeY/2, 0)).Position)
 					local bottom = camera:WorldToViewportPoint((cf * CFrame.new(0, -sizeY/2, 0)).Position)
 					local left = camera:WorldToViewportPoint((cf * CFrame.new(-sizeX/2, 0, 0)).Position)
@@ -8288,16 +8298,28 @@ local script = G2L["177"];
 					obj.boxFrame.Visible = true
 					obj.uistroke.Color = activeColor
 	
-					obj.nameLabel.Position = UDim2.fromOffset(screenPos.X, screenPos.Y - (height/2) - 15)
+					-- ==================== SCALED NAME & DIST LABELS ====================
+					local dist = localRoot and math.floor((root.Position - localRoot.Position).Magnitude) or 0
+	
+					-- Dynamic scaling based on distance + FOV (fixes car/FOV issue)
+					local scaleFactor = math.clamp(1800 / (dist + 120), 0.45, 2.2)   -- tweak 1800 if you want bigger/smaller text
+					local fovFactor = 70 / camera.FieldOfView
+					local finalScale = scaleFactor * fovFactor
+	
+					-- Name Label (scaled)
+					obj.nameLabel.Size = UDim2.fromOffset(180 * finalScale, 18 * finalScale)
+					obj.nameLabel.Position = UDim2.fromOffset(screenPos.X, screenPos.Y - (height/2) - 18 * finalScale)
 					obj.nameLabel.TextColor3 = activeColor
 					obj.nameLabel.Visible = true
 	
-					local dist = localRoot and math.floor((root.Position - localRoot.Position).Magnitude) or 0
-					obj.distLabel.Position = UDim2.fromOffset(screenPos.X, screenPos.Y + (height/2) + 5)
+					-- Dist Label (scaled)
+					obj.distLabel.Size = UDim2.fromOffset(180 * finalScale, 20 * finalScale)
+					obj.distLabel.Position = UDim2.fromOffset(screenPos.X, screenPos.Y + (height/2) + 8 * finalScale)
 					obj.distLabel.Text = dist .. " studs"
 					obj.distLabel.TextColor3 = activeColor
 					obj.distLabel.Visible = true
 	
+					-- Health Bar
 					obj.healthFrame.Position = UDim2.fromOffset(screenPos.X + (width/2) + 6, screenPos.Y - (height/2) - 2)
 					obj.healthFrame.Size = UDim2.fromOffset(3, height + 4)
 					obj.healthFrame.Visible = true
@@ -8308,13 +8330,21 @@ local script = G2L["177"];
 					obj.highlight.OutlineColor = activeColor
 					obj.highlight.Enabled = true
 				else
-					obj.boxFrame.Visible, obj.nameLabel.Visible, obj.distLabel.Visible, obj.healthFrame.Visible, obj.highlight.Enabled = false, false, false, false, false
+					obj.boxFrame.Visible = false
+					obj.nameLabel.Visible = false
+					obj.distLabel.Visible = false
+					obj.healthFrame.Visible = false
+					obj.highlight.Enabled = false
 				end
 			else
-				obj.boxFrame.Visible, obj.nameLabel.Visible, obj.distLabel.Visible, obj.healthFrame.Visible, obj.highlight.Enabled = false, false, false, false, false
+				obj.boxFrame.Visible = false
+				obj.nameLabel.Visible = false
+				obj.distLabel.Visible = false
+				obj.healthFrame.Visible = false
+				obj.highlight.Enabled = false
 			end
 	
-			-- Tracer update
+			-- ==================== TRACERS (now fixed) ====================
 			if shouldShowTracer and localAttachNow and root then
 				obj.beam.Attachment0 = localAttachNow
 				obj.beam.Attachment1 = root:FindFirstChild("TracerAttach1")
