@@ -7,7 +7,7 @@
  Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  CONVERTER 
 ]=]
 
--- Instances: 520 | Scripts: 121 | Modules: 0 | Tags: 0
+-- Instances: 523 | Scripts: 122 | Modules: 0 | Tags: 0
 local G2L = {};
 
 -- StarterGui.HHHHAAAACCCCKKKK
@@ -802,6 +802,7 @@ G2L["54"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl
 G2L["55"] = Instance.new("Frame", G2L["1a"]);
+G2L["55"]["Visible"] = false;
 G2L["55"]["ZIndex"] = 10;
 G2L["55"]["BorderSizePixel"] = 0;
 G2L["55"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
@@ -1398,6 +1399,7 @@ G2L["96"]["BackgroundColor3"] = Color3.fromRGB(49, 49, 49);
 G2L["96"]["RichText"] = true;
 G2L["96"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
 G2L["96"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
+G2L["96"]["ClearTextOnFocus"] = false;
 G2L["96"]["Size"] = UDim2.new(0.103, 0, 0.063, 0);
 G2L["96"]["Position"] = UDim2.new(0.6084, 0, 0.17598, 0);
 G2L["96"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
@@ -3339,7 +3341,6 @@ G2L["167"]["Position"] = UDim2.new(0.01023, 0, -0.08152, 0);
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs
 G2L["168"] = Instance.new("Frame", G2L["1a"]);
-G2L["168"]["Visible"] = false;
 G2L["168"]["Active"] = true;
 G2L["168"]["ZIndex"] = 10;
 G2L["168"]["BorderSizePixel"] = 0;
@@ -4767,6 +4768,35 @@ G2L["208"]["Transparency"] = 0.65;
 G2L["208"]["Thickness"] = 1.6;
 
 
+-- StarterGui.HHHHAAAACCCCKKKK.pos1
+G2L["209"] = Instance.new("TextLabel", G2L["1"]);
+G2L["209"]["TextWrapped"] = true;
+G2L["209"]["ZIndex"] = 5;
+G2L["209"]["BorderSizePixel"] = 0;
+G2L["209"]["TextSize"] = 14;
+G2L["209"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+G2L["209"]["TextScaled"] = true;
+G2L["209"]["BackgroundColor3"] = Color3.fromRGB(49, 49, 49);
+G2L["209"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L["209"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+G2L["209"]["BackgroundTransparency"] = 0.75;
+G2L["209"]["Size"] = UDim2.new(0.1681, 0, 0.04906, 0);
+G2L["209"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+G2L["209"]["Text"] = [[Coordanets - 0, 0, 0]];
+G2L["209"]["Name"] = [[pos1]];
+G2L["209"]["Position"] = UDim2.new(0.41491, 0, 0.88841, 0);
+
+
+-- StarterGui.HHHHAAAACCCCKKKK.pos1.UICorner
+G2L["20a"] = Instance.new("UICorner", G2L["209"]);
+G2L["20a"]["CornerRadius"] = UDim.new(0.3, 0);
+
+
+-- StarterGui.HHHHAAAACCCCKKKK.pos1.LocalScript
+G2L["20b"] = Instance.new("LocalScript", G2L["209"]);
+
+
+
 -- StarterGui.HHHHAAAACCCCKKKK.GUI5.LocalScript
 local function C_7()
 local script = G2L["7"];
@@ -5992,6 +6022,7 @@ local script = G2L["97"];
 			end
 		end
 	end)
+	
 end;
 task.spawn(C_97);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.pos.aa
@@ -8632,13 +8663,12 @@ local script = G2L["1a2"];
 	local root = hhhh:WaitForChild("GUI")
 	local main = root:WaitForChild("txbas")
 	local guFolder = main:WaitForChild("Gu") -- Složka obsahující thm a GUI3
-	
 	-- DALŠÍ CESTY
 	local hltbar = hhhh:WaitForChild("hltbar")
 	local fs = hhhh:WaitForChild("fs")
 	local gui3 = guFolder:WaitForChild("GUI3")
 	local gui5 = hhhh:WaitForChild("GUI5")
-	
+	local cor = hhhh.pos1
 	-- NASTAVENÍ BAREV (Normal Theme)
 	local targetColor = Color3.fromRGB(48, 48, 48)
 	local targetColor2 = Color3.fromRGB(255, 255, 255)
@@ -8657,8 +8687,9 @@ local script = G2L["1a2"];
 	but.Activated:Connect(function()
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://95449354283188"
-	
-		-- 2. TEXTY A ZÁKLADNÍ NASTAVENÍ
+		cor.BackgroundColor3 = targetColor
+		cor.TextColor3 = targetColor2
+		cor.BackgroundTransparency = 0.6
 		local thm = guFolder:FindFirstChild("thm", true)
 		if thm then
 			thm.TextLabel2.Text = "Theme: Normal"
@@ -8758,7 +8789,7 @@ local script = G2L["1a7"];
 	local main = root:WaitForChild("txbas")
 	local guFolder = main:WaitForChild("Gu")
 	local crystalsFolder = root:WaitForChild("crystals")
-	
+	local cor = hhhh.pos1
 	-- DALŠÍ CESTY
 	local hltbar = hhhh:WaitForChild("hltbar")
 	local fs = hhhh:WaitForChild("fs")
@@ -8783,8 +8814,9 @@ local script = G2L["1a7"];
 	but.Activated:Connect(function()
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://72612072480119"
-	
-		-- 2. TEXTY A ZÁKLADNÍ NASTAVENÍ
+		cor.BackgroundColor3 = targetColor
+		cor.TextColor3 = targetColor2
+		cor.BackgroundTransparency = 0.6
 		local thm = guFolder:FindFirstChild("thm", true)
 		if thm then
 			thm.TextLabel2.Text = "Theme: Black Amethyst"
@@ -8887,7 +8919,7 @@ local script = G2L["1ac"];
 	local main = root:WaitForChild("txbas")
 	local guFolder = main:WaitForChild("Gu")
 	local crystalsFolder = root:WaitForChild("crystals")
-	
+	local cor = hhhh.pos1
 	-- DALŠÍ CESTY
 	local hltbar = hhhh:WaitForChild("hltbar")
 	local fs = hhhh:WaitForChild("fs")
@@ -8913,8 +8945,9 @@ local script = G2L["1ac"];
 		hltbar.bar.imag.Image = "rbxassetid://77721644316711"
 		task.wait(0.05)
 		main.GUI12.ImageLabel.Image = "rbxassetid://106531222347917"
-	
-		-- 2. TEXTY A ZÁKLADNÍ NASTAVENÍ
+		cor.BackgroundColor3 = targetColor
+		cor.TextColor3 = targetColor2
+		cor.BackgroundTransparency = 0.6
 		local thm = guFolder:FindFirstChild("thm", true)
 		if thm then
 			thm.TextLabel2.Text = "Theme: Frutiger Aero"
@@ -9013,7 +9046,7 @@ local script = G2L["1b1"];
 	local player = game.Players.LocalPlayer
 	local root = player.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("GUI")
 	local main = root:WaitForChild("txbas")
-	
+	local cor = root.Parent:WaitForChild("pos1")
 	-- DALŠÍ CESTY
 	local hltbar = player.PlayerGui.HHHHAAAACCCCKKKK:WaitForChild("hltbar")
 	local fs = player.PlayerGui.HHHHAAAACCCCKKKK:WaitForChild("fs")
@@ -9039,7 +9072,9 @@ local script = G2L["1b1"];
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://135907340809252"
 		gui5.grs.a.Image = "rbxassetid://70725559734526"
-		-- 2. NASTAVENÍ TEXTŮ A VIDITELNOSTI
+		cor.BackgroundColor3 = darkBg
+		cor.TextColor3 = targetColor2
+		cor.BackgroundTransparency = 0
 		main.Gu.thm.TextLabel2.Text = "Theme: GraySkyNight"
 		main.Gu.thm.TextLabel2.TextColor3 = targetColor2
 		gui3.Visible = false
@@ -9191,5 +9226,33 @@ local script = G2L["201"];
 	player.CharacterAdded:Connect(setupCharacter)
 end;
 task.spawn(C_201);
+-- StarterGui.HHHHAAAACCCCKKKK.pos1.LocalScript
+local function C_20b()
+local script = G2L["20b"];
+	local Players = game:GetService("Players")
+	local RunService = game:GetService("RunService")
+	
+	local player = Players.LocalPlayer
+	local textLabel = script.Parent -- Refers to the TextLabel
+	
+	-- Function to update the text
+	local function updateCoordinates()
+		local character = player.Character
+		if character then
+			-- Find the HumanoidRootPart to get accurate position
+			local hrp = character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local pos = hrp.Position
+				-- Format: Position: X, Y, Z (rounded down)
+				textLabel.Text = string.format("X - %d | Y - %d | Z - %d", math.floor(pos.X), math.floor(pos.Y), math.floor(pos.Z))
+			end
+		end
+	end
+	
+	-- Update text every frame
+	RunService.Heartbeat:Connect(updateCoordinates)
+	
+end;
+task.spawn(C_20b);
 
 return G2L["1"], require;
