@@ -993,7 +993,7 @@ G2L["68"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
 G2L["68"]["BackgroundTransparency"] = 0.75;
 G2L["68"]["Size"] = UDim2.new(0.047, 0, 0.064, 0);
 G2L["68"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["68"]["Text"] = [[Flying-OFF]];
+G2L["68"]["Text"] = [[Fly-OFF]];
 G2L["68"]["Name"] = [[fl]];
 G2L["68"]["Position"] = UDim2.new(0.71411, 0, 0.4355, 0);
 
@@ -1431,7 +1431,6 @@ G2L["9a"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.JumpPowweeer
 G2L["9b"] = Instance.new("TextBox", G2L["55"]);
-G2L["9b"]["CursorPosition"] = -1;
 G2L["9b"]["Name"] = [[JumpPowweeer]];
 G2L["9b"]["PlaceholderColor3"] = Color3.fromRGB(179, 179, 179);
 G2L["9b"]["ZIndex"] = 4;
@@ -4787,14 +4786,14 @@ G2L["209"]["Name"] = [[pos1]];
 G2L["209"]["Position"] = UDim2.new(0.41491, 0, 0.88841, 0);
 
 
--- StarterGui.HHHHAAAACCCCKKKK.pos1.UICorner
-G2L["20a"] = Instance.new("UICorner", G2L["209"]);
-G2L["20a"]["CornerRadius"] = UDim.new(0.3, 0);
-
-
 -- StarterGui.HHHHAAAACCCCKKKK.pos1.LocalScript
-G2L["20b"] = Instance.new("LocalScript", G2L["209"]);
+G2L["20a"] = Instance.new("LocalScript", G2L["209"]);
 
+
+
+-- StarterGui.HHHHAAAACCCCKKKK.pos1.UICorner
+G2L["20b"] = Instance.new("UICorner", G2L["209"]);
+G2L["20b"]["CornerRadius"] = UDim.new(0.3, 0);
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI5.LocalScript
@@ -5426,29 +5425,114 @@ task.spawn(C_5b);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.np.LocalScript
 local function C_5f()
 local script = G2L["5f"];
+	-- === PRISON LIFE NOCLIP WITH BUTTON + BYPASS + SMOOTH RESET ===
 	local RunService = game:GetService("RunService")
 	local Players = game:GetService("Players")
 	
-	local LocalPlayer = Players.LocalPlayer
-	local noclipBtn = script.Parent
+	local player = Players.LocalPlayer
+	local noclipButton = script.Parent   -- Script must be inside your TextButton
+	
 	local noclipEnabled = false
 	
-	noclipBtn.MouseButton1Click:Connect(function()
-		noclipEnabled = not noclipEnabled
-		noclipBtn.Text = noclipEnabled and "Noclip-ON" or "Noclip-OFF"
-	end)
+	-- ================== BYPASS (keeps Head from fighting back) ==================
+	local function applyBypass()
+		local char = player.Character
+		if not char then return end
 	
-	RunService.Stepped:Connect(function()
-		if noclipEnabled and LocalPlayer.Character then
-			for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-				if part:IsA("BasePart") then
-					-- Vypne kolize, aby tě nic nebrzdilo při cestě nahoru
+		for _, part in ipairs(char:GetDescendants()) do
+			if (part:IsA("BasePart") or part:IsA("MeshPart")) and 
+				(part.Name == "Head" or part.Name == "Torso" or part.Name == "UpperTorso") then
+	
+				part.CanCollide = false
+	
+				-- Block the game from forcing it back
+				part:GetPropertyChangedSignal("CanCollide"):Connect(function()
+					if part.CanCollide == true then
+						part.CanCollide = false
+					end
+				end)
+			end
+		end
+	end
+	
+	-- ================== NOCLIP LOOP ==================
+	RunService.Heartbeat:Connect(function()
+		if not noclipEnabled or not player.Character then return end
+	
+		local char = player.Character
+	
+		for _, part in ipairs(char:GetDescendants()) do
+			if part:IsA("BasePart") or part:IsA("MeshPart") then
+				if part.CanCollide then
 					part.CanCollide = false
 				end
 			end
 		end
+	
+		-- Extra force on Head & Torso
+		local head = char:FindFirstChild("Head")
+		if head then head.CanCollide = false end
+	
+		local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+		if torso then torso.CanCollide = false end
 	end)
-	 
+	
+	-- ================== BUTTON TOGGLE + BETTER RESET ==================
+	noclipButton.MouseButton1Click:Connect(function()
+		noclipEnabled = not noclipEnabled
+	
+		if noclipEnabled then
+			noclipButton.Text = "Noclip-ON"
+	
+			if player.Character then
+				applyBypass()
+			end
+		else
+			noclipButton.Text = "Noclip-OFF"
+	
+			-- === IMPORTANT: Clean reset when turning OFF ===
+			if player.Character then
+				local char = player.Character
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				local root = char:FindFirstChild("HumanoidRootPart")
+	
+				task.wait(0.1)  -- small delay so physics settles
+	
+				-- Reset all collisions
+				for _, part in ipairs(char:GetDescendants()) do
+					if part:IsA("BasePart") or part:IsA("MeshPart") then
+						part.CanCollide = true
+					end
+				end
+	
+				-- Fix the stiff/blocky movement
+				if hum then
+					hum.PlatformStand = false
+					hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+					task.wait(0.1)
+					hum:ChangeState(Enum.HumanoidStateType.Running)   -- Force normal walking state
+				end
+	
+				-- Optional: Small jump to reset physics fully
+				if root then
+					root.Velocity = root.Velocity + Vector3.new(0, 5, 0)
+				end
+			end
+		end
+	end)
+	
+	-- ================== RESPAWN SUPPORT ==================
+	player.CharacterAdded:Connect(function()
+		task.wait(1.2)
+		if noclipEnabled and player.Character then
+			applyBypass()
+		end
+	end)
+	
+	if player.Character then
+		task.wait(0.5)
+		applyBypass()
+	end
 end;
 task.spawn(C_5f);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.np.aa
@@ -5569,27 +5653,44 @@ task.spawn(C_65);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.fl.LocalScript
 local function C_69()
 local script = G2L["69"];
+	-- Put this script directly INSIDE your main Fly button
 	local UIS = game:GetService("UserInputService")
 	local RunService = game:GetService("RunService")
-	local player = game.Players.LocalPlayer
+	local Players = game:GetService("Players")
+	
+	local player = Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 	
-	local button = script.Parent
-	local speedInput = button.Parent:WaitForChild("FlSped")
+	local gui = script.Parent.Parent
+	
+	local flyButton   = script.Parent                    -- This button (the one the script is in)
+	local speedInput  = gui:WaitForChild("FlSped")
+	
+	local btn1 = gui:WaitForChild("fl1")
+	local btn2 = gui:WaitForChild("fl2")
+	local btn3 = gui:WaitForChild("fl3")
+	local btn4 = gui:WaitForChild("fl4")
+	local btn5 = gui:WaitForChild("fl5")
+	local btn6 = gui:WaitForChild("fl6")
+	local btn7 = gui:WaitForChild("fl7")
 	
 	local flying = false
 	local flyActive = false
 	local bodyVelocity = nil
 	local animConnection = nil
+	local flyConnection = nil
 	
-	-- Kills all walking/jumping animations
+	-- Animation control
 	local function setAnims(state)
 		local char = player.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		if not hum then return end
+	
 		if state == false then
-			for _, v in pairs(hum:GetPlayingAnimationTracks()) do v:Stop() end
-			animConnection = hum.AnimationPlayed:Connect(function(track) track:Stop() end)
+			for _, track in pairs(hum:GetPlayingAnimationTracks()) do track:Stop() end
+			if not animConnection then
+				animConnection = hum.AnimationPlayed:Connect(function(track) track:Stop() end)
+			end
 		elseif animConnection then
 			animConnection:Disconnect()
 			animConnection = nil
@@ -5604,23 +5705,9 @@ local script = G2L["69"];
 		if not hum or not root then return end
 	
 		if flyActive then
-			local seat = hum.SeatPart
-	
-			-- 1. LOCKDOWN: Physically weld and disable seat ejection
-			if seat then
-				seat.Disabled = true
-				local lock = root:FindFirstChild("FlySeatLock") or Instance.new("WeldConstraint")
-				lock.Name = "FlySeatLock"
-				lock.Part0 = root
-				lock.Part1 = seat
-				lock.Parent = root
-			end
-	
-			-- 2. SETUP FLY PHYSICS
 			setAnims(false)
 			hum.PlatformStand = true
-			-- We use "Heuristic" state to stay under the anti-cheat radar
-			hum:ChangeState(Enum.HumanoidStateType.None) 
+			hum:ChangeState(Enum.HumanoidStateType.Physics)
 	
 			bodyVelocity = root:FindFirstChild("FlyVelocity") or Instance.new("BodyVelocity")
 			bodyVelocity.Name = "FlyVelocity"
@@ -5628,78 +5715,102 @@ local script = G2L["69"];
 			bodyVelocity.Velocity = Vector3.new(0, 0, 0)
 			bodyVelocity.Parent = root
 	
-			RunService:BindToRenderStep("FlyLoop", Enum.RenderPriority.Camera.Value, function()
-				if UIS:GetFocusedTextBox() then bodyVelocity.Velocity = Vector3.new(0,0,0) return end
-	
-				-- Force the 'Sitting' state and animation every single frame
-				if seat then 
-					hum.Sit = true 
+			flyConnection = RunService:BindToRenderStep("FlyLoop", Enum.RenderPriority.Camera.Value, function()
+				if UIS:GetFocusedTextBox() then 
+					bodyVelocity.Velocity = Vector3.new(0,0,0) 
+					return 
 				end
 	
-				local currentSpeed = tonumber(speedInput.Text) or 16
-				local direction = Vector3.new(0, 0, 0)
+				local currentSpeed = tonumber(speedInput.Text) or 60
 	
-				-- Control Logic
-				if UIS:IsKeyDown(Enum.KeyCode.W) then direction = direction + camera.CFrame.LookVector end
-				if UIS:IsKeyDown(Enum.KeyCode.S) then direction = direction - camera.CFrame.LookVector end
-				if UIS:IsKeyDown(Enum.KeyCode.A) then direction = direction - camera.CFrame.RightVector end
-				if UIS:IsKeyDown(Enum.KeyCode.D) then direction = direction + camera.CFrame.RightVector end
-				if UIS:IsKeyDown(Enum.KeyCode.Space) then direction = direction + Vector3.new(0, 1, 0) end
-				if UIS:IsKeyDown(Enum.KeyCode.Q) then direction = direction - Vector3.new(0, 1, 0) end
+				local direction = Vector3.new(0, 0, 0)
+				if UIS:IsKeyDown(Enum.KeyCode.W) then direction += camera.CFrame.LookVector end
+				if UIS:IsKeyDown(Enum.KeyCode.S) then direction -= camera.CFrame.LookVector end
+				if UIS:IsKeyDown(Enum.KeyCode.A) then direction -= camera.CFrame.RightVector end
+				if UIS:IsKeyDown(Enum.KeyCode.D) then direction += camera.CFrame.RightVector end
+				if UIS:IsKeyDown(Enum.KeyCode.Space) then direction += Vector3.new(0, 1, 0) end
+				if UIS:IsKeyDown(Enum.KeyCode.Q) then direction -= Vector3.new(0, 1, 0) end
 	
 				root.RotVelocity = Vector3.new(0, 0, 0)
-				bodyVelocity.Velocity = direction.Magnitude > 0 and direction.Unit * currentSpeed or Vector3.new(0,0,0)
+				bodyVelocity.Velocity = direction.Magnitude > 0 and (direction.Unit * currentSpeed) or Vector3.new(0,0,0)
 	
-				-- Update CFrame so the character and seat rotate with the camera
 				root.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector)
 			end)
+	
 		else
-			-- 3. CLEAN RESET
-			RunService:UnbindFromRenderStep("FlyLoop")
-			if bodyVelocity then bodyVelocity:Destroy() end
+			-- Clean stop
+			if flyConnection then
+				RunService:UnbindFromRenderStep("FlyLoop")
+				flyConnection = nil
+			end
+			if bodyVelocity then
+				bodyVelocity:Destroy()
+				bodyVelocity = nil
+			end
 	
 			setAnims(true)
 			hum.PlatformStand = false
 			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+			task.wait(0.05)
+			hum:ChangeState(Enum.HumanoidStateType.Running)
 	
-			-- Unlock the world
-			for _, v in pairs(workspace:GetDescendants()) do
-				if v:IsA("Seat") or v:IsA("VehicleSeat") then v.Disabled = false end
+			if hum then
+				hum.Jump = true
+				task.wait(0.03)
+				hum.Jump = false
 			end
+	
+			local seat = hum.SeatPart
+			if seat then seat.Disabled = false end
+			local lock = root:FindFirstChild("FlySeatLock")
+			if lock then lock:Destroy() end
 		end
 	end
 	
-	-- 4. THE ANTI-EJECT CLEANUP
-	local function setup(h)
-		h:GetPropertyChangedSignal("Sit"):Connect(function()
-			-- If the game tries to eject us while flying is ON, we force ourselves back
-			if not h.Sit and flyActive then
-				h.Sit = true
-			elseif not h.Sit and not flyActive then
-				-- Normal exit when flying is off
-				local r = h.Parent:FindFirstChild("HumanoidRootPart")
-				if r and r:FindFirstChild("FlySeatLock") then r.FlySeatLock:Destroy() end
-				for _, v in pairs(workspace:GetDescendants()) do
-					if v:IsA("Seat") or v:IsA("VehicleSeat") then v.Disabled = false end
-				end
-			end
-		end)
+	-- ================== SPEED PRESET BUTTONS ==================
+	local function setFlySpeedFromButton(btn)
+		if btn.Text and tonumber(btn.Text) then
+			speedInput.Text = btn.Text
+		else
+			speedInput.Text = "60"   -- fallback if button has no valid number
+		end
 	end
 	
-	player.CharacterAdded:Connect(function(c) setup(c:WaitForChild("Humanoid")) end)
-	if player.Character then setup(player.Character:WaitForChild("Humanoid")) end
+	-- Connect all buttons (except fl5)
+	btn1.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn1) end)
+	btn2.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn2) end)
+	btn3.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn3) end)
+	btn4.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn4) end)
+	btn6.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn6) end)
+	btn7.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn7) end)
 	
-	button.MouseButton1Click:Connect(function()
+	-- fl5 = Match current WalkSpeed
+	btn5.MouseButton1Click:Connect(function()
+		local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if hum then
+			speedInput.Text = tostring(math.floor(hum.WalkSpeed))
+		else
+			speedInput.Text = "16"
+		end
+	end)
+	
+	-- Main Fly Toggle
+	flyButton.MouseButton1Click:Connect(function()
 		flying = not flying
-		button.Text = flying and "Flying-ON" or "Flying-OFF"
+		flyButton.Text = flying and "Fly-ON" or "Fly-OFF"
 		toggleFlyMode(flying)
 	end)
 	
+	-- Left Alt to pause/resume
 	UIS.InputBegan:Connect(function(i, g)
 		if not g and i.KeyCode == Enum.KeyCode.LeftAlt and flying then
 			flyActive = not flyActive
 			toggleFlyMode(flyActive)
 		end
+	end)
+	
+	player.CharacterAdded:Connect(function()
+		task.wait(0.8)
 	end)
 end;
 task.spawn(C_69);
@@ -9257,8 +9368,8 @@ local script = G2L["201"];
 end;
 task.spawn(C_201);
 -- StarterGui.HHHHAAAACCCCKKKK.pos1.LocalScript
-local function C_20b()
-local script = G2L["20b"];
+local function C_20a()
+local script = G2L["20a"];
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
 	
@@ -9283,6 +9394,6 @@ local script = G2L["20b"];
 	RunService.Heartbeat:Connect(updateCoordinates)
 	
 end;
-task.spawn(C_20b);
+task.spawn(C_20a);
 
 return G2L["1"], require;
