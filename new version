@@ -7,7 +7,7 @@
  Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  CONVERTER 
 ]=]
 
--- Instances: 619 | Scripts: 147 | Modules: 0 | Tags: 0
+-- Instances: 620 | Scripts: 147 | Modules: 1 | Tags: 0
 local G2L = {};
 
 -- StarterGui.HHHHAAAACCCCKKKK
@@ -5770,6 +5770,103 @@ G2L["26b"] = Instance.new("LocalScript", G2L["263"]);
 
 
 
+-- StarterGui.HHHHAAAACCCCKKKK.SettingsManager
+G2L["26c"] = Instance.new("ModuleScript", G2L["1"]);
+G2L["26c"]["Name"] = [[SettingsManager]];
+
+
+-- Require G2L wrapper
+local G2L_REQUIRE = require;
+local G2L_MODULES = {};
+local function require(Module:ModuleScript)
+    local ModuleState = G2L_MODULES[Module];
+    if ModuleState then
+        if not ModuleState.Required then
+            ModuleState.Required = true;
+            ModuleState.Value = ModuleState.Closure();
+        end
+        return ModuleState.Value;
+    end;
+    return G2L_REQUIRE(Module);
+end
+
+G2L_MODULES[G2L["26c"]] = {
+Closure = function()
+    local script = G2L["26c"];local SettingsManager = {}
+
+local EXCLUDED_KEYS = {
+	["fps"] = true,
+}
+
+local SAVE_KEY = "ChetahsSettings_v1"
+local HttpService = game:GetService("HttpService")
+
+-- Registered getters: key -> function that returns current value
+-- Scripts call register() to tell the system how to read their state
+local getters = {}
+
+-- Register a setting with a function that returns its current value
+-- Call this once per setting, right after initializing the variable
+function SettingsManager.register(key, getValueFunc)
+	getters[key] = getValueFunc
+end
+
+-- Collect all current values from registered getters
+local function collectValues()
+	local data = {}
+	for key, getter in pairs(getters) do
+		if not EXCLUDED_KEYS[key] then
+			local success, value = pcall(getter)
+			if success then
+				data[key] = value
+			end
+		end
+	end
+	return data
+end
+
+-- Save current state to file
+function SettingsManager.save()
+	local data = collectValues()
+	pcall(function()
+		writefile(SAVE_KEY, HttpService:JSONEncode(data))
+	end)
+end
+
+-- Load saved data from file
+function SettingsManager.load()
+	local success, result = pcall(function()
+		if isfile(SAVE_KEY) then
+			return HttpService:JSONDecode(readfile(SAVE_KEY))
+		end
+		return nil
+	end)
+	if success and result then
+		return result
+	end
+	return nil
+end
+
+-- Get a specific saved value (used on load to restore state)
+function SettingsManager.get(key, default)
+	local data = SettingsManager.load()
+	if data and data[key] ~= nil then
+		return data[key]
+	end
+	return default
+end
+
+-- Auto-save loop: saves every 3 seconds automatically
+-- No script ever needs to call save() or set() manually
+task.spawn(function()
+	while task.wait(3) do
+		SettingsManager.save()
+	end
+end)
+
+return SettingsManager
+end;
+};
 -- StarterGui.HHHHAAAACCCCKKKK.GUI5.LocalScript
 local function C_7()
 local script = G2L["7"];
@@ -5875,6 +5972,7 @@ local function C_16()
 local script = G2L["16"];
 	local RunService = game:GetService("RunService")
 	local Workspace = game:GetService("Workspace")
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	local Gui = game.Players.LocalPlayer.PlayerGui.HHHHAAAACCCCKKKK.GUI
 	local function find(name)
 		return Gui:FindFirstChild(name, true)
@@ -5887,7 +5985,9 @@ local script = G2L["16"];
 	local g4 = find("ultralowgr")
 	local g5 = find("megahigr")
 	
-	local targetGravity = 196.2 -- Výchozí hodnota v Robloxu
+	local targetGravity = SettingsManager.get("gravity", 196.2)
+	SettingsManager.register("gravity", function() return targetGravity end)
+	gravBox.Text = tostring(targetGravity)
 	
 	-- 1. FUNKCE PRO NASTAVENÍ GRAVITACE
 	local function setGravity(newGrav)
@@ -5933,6 +6033,7 @@ local script = G2L["17"];
 	local UserInputService = game:GetService("UserInputService")
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
 	local player = Players.LocalPlayer
 	local camera = workspace.CurrentCamera
@@ -5944,7 +6045,8 @@ local script = G2L["17"];
 	
 	-- NASTAVENÍ PŘI JOINU
 	local menuOpen = true 
-	local lockEnabled = false -- true = Myš se nezamyká/neodmyká (zůstane locknutá)
+	local lockEnabled = SettingsManager.get("mouseLock", false)
+	SettingsManager.register("mouseLock", function() return lockEnabled end)
 	
 	mainFrame.Visible = menuOpen
 	
@@ -6026,6 +6128,7 @@ local script = G2L["18"];
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
 	local LocalPlayer = Players.LocalPlayer
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
 	local fldr = script.Parent.txbas.Pl
 	
@@ -6035,7 +6138,9 @@ local script = G2L["18"];
 	local b3 = fldr:WaitForChild("megafast")
 	local b4 = fldr:WaitForChild("midfast")
 	
-	local targetSpeed = 16
+	local targetSpeed = SettingsManager.get("walkSpeed", 16)
+	SettingsManager.register("walkSpeed", function() return targetSpeed end)
+	speedBox.Text = tostring(targetSpeed)
 	
 	-- 1. FUNKCE PRO NASTAVENÍ RYCHLOSTI
 	local function setSpeed(newSpeed)
@@ -9317,12 +9422,11 @@ local script = G2L["1aa"];
 	local UIS = game:GetService("UserInputService")
 	local RS = game:GetService("RunService")
 	local Players = game:GetService("Players")
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
-	-- PLAYER / CAMERA
 	local lp = Players.LocalPlayer
 	local cam = workspace.CurrentCamera
 	
-	-- UI
 	local menu = script.Parent.Parent
 	local aimBtn = menu:WaitForChild("ambo")
 	local teamBtn = menu:WaitForChild("tmchk")
@@ -9331,21 +9435,34 @@ local script = G2L["1aa"];
 	local shwfvrad = menu:WaitForChild("shfv")
 	local rnbwBtn = menu:WaitForChild("rnbw")
 	
-	-- STATES
-	local aim_On = false
-	local aim_TC = true
-	local aim_WC = true
+	local aim_On = SettingsManager.get("aimbot", false)
+	local aim_TC = SettingsManager.get("aimbotTeamCheck", true)
+	local aim_WC = SettingsManager.get("aimbotWallCheck", true)
 	local aiming = false
-	local showFOV = false 
-	local rainbow = false 
+	local showFOV = SettingsManager.get("aimbotShowFOV", false)
+	local rainbow = SettingsManager.get("aimbotRGB", false)
 	
-	-- SETTINGS
-	local FOV_RADIUS = 400
+	local FOV_RADIUS = SettingsManager.get("aimbotFOVRadius", 400)
 	local TARGET_PART = "Head"
 	
-	-- INTERNAL
 	local lockedTarget = nil
 	local hue = 0
+	
+	-- Register all states for auto-save
+	SettingsManager.register("aimbot", function() return aim_On end)
+	SettingsManager.register("aimbotTeamCheck", function() return aim_TC end)
+	SettingsManager.register("aimbotWallCheck", function() return aim_WC end)
+	SettingsManager.register("aimbotShowFOV", function() return showFOV end)
+	SettingsManager.register("aimbotRGB", function() return rainbow end)
+	SettingsManager.register("aimbotFOVRadius", function() return FOV_RADIUS end)
+	
+	-- Apply saved states to UI
+	aimBtn.Text = "Aimbot-" .. (aim_On and "ON" or "OFF")
+	teamBtn.Text = "TeamCheck-" .. (aim_TC and "ON" or "OFF")
+	wallBtn.Text = "WallCheck-" .. (aim_WC and "ON" or "OFF")
+	shwfvrad.Text = "ShowFOV-" .. (showFOV and "ON" or "OFF")
+	rnbwBtn.Text = "RGB-" .. (rainbow and "ON" or "OFF")
+	radiustxtbox.Text = tostring(FOV_RADIUS)
 	
 	---------------------------------------------------
 	-- FOV CIRCLE
@@ -9649,10 +9766,24 @@ local script = G2L["1b7"];
 	local LocalPlayer = Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 	
-	local espEnabled = false
-	local tracersEnabled = false
-	local teamCheck = true
-	local rainbowEnabled = false
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	local espEnabled = SettingsManager.get("esp", false)
+	local tracersEnabled = SettingsManager.get("espTracers", false)
+	local teamCheck = SettingsManager.get("espTeamCheck", true)
+	local rainbowEnabled = SettingsManager.get("espRGB", false)
+	
+	-- Register all states for auto-save
+	SettingsManager.register("esp", function() return espEnabled end)
+	SettingsManager.register("espTracers", function() return tracersEnabled end)
+	SettingsManager.register("espTeamCheck", function() return teamCheck end)
+	SettingsManager.register("espRGB", function() return rainbowEnabled end)
+	
+	-- Apply saved states to UI
+	espButton.Text = espEnabled and "ESP-ON" or "ESP-OFF"
+	if trsButton then trsButton.Text = tracersEnabled and "Tracers-ON" or "Tracers-OFF" end
+	if tmchkButton then tmchkButton.Text = teamCheck and "TeamCheck-ON" or "TeamCheck-OFF" end
+	if rnbwButton then rnbwButton.Text = rainbowEnabled and "RGB-ON" or "RGB-OFF" end
 	
 	local espObjects = {}
 	local localAttach = nil
@@ -10007,8 +10138,18 @@ local script = G2L["1c0"];
 	local esOutBox = script.Parent.Parent:WaitForChild("EsOut")
 	local esColBox = script.Parent.Parent:WaitForChild("EsCol")
 	
-	local espEnabled = false
-	local espTeamCheck = true
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	local espEnabled = SettingsManager.get("espHighlight", false)
+	local espTeamCheck = SettingsManager.get("espHighlightTeamCheck", true)
+	
+	-- Register for auto-save
+	SettingsManager.register("espHighlight", function() return espEnabled end)
+	SettingsManager.register("espHighlightTeamCheck", function() return espTeamCheck end)
+	
+	-- Apply saved states to UI
+	espButton.Text = espEnabled and "ESP-ON" or "ESP-OFF"
+	teamCheckButton.Text = espTeamCheck and "TeamCheck_ESP-ON" or "TeamCheck_ESP-OFF"
 	local highlights = {}
 	
 	-- 1. STEJNÁ POKROČILÁ DETEKCE TÝMU JAKO U AIMBOTU (Fix pro Rivals)
@@ -10180,13 +10321,25 @@ local script = G2L["1cc"];
 	local wallBtn  = menu:WaitForChild("wchk")
 	
 	-- STATES
-	local aim_On = false
-	local aim_TC = true
-	local aim_WC = true
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	local aim_On = SettingsManager.get("aimbot2", false)
+	local aim_TC = SettingsManager.get("aimbot2TeamCheck", true)
+	local aim_WC = SettingsManager.get("aimbot2WallCheck", true)
 	local aiming = false
 	
-	-- SETTINGS
-	local FOV_RADIUS = 150
+	local FOV_RADIUS = SettingsManager.get("aimbot2FOVRadius", 150)
+	
+	-- Register for auto-save
+	SettingsManager.register("aimbot2", function() return aim_On end)
+	SettingsManager.register("aimbot2TeamCheck", function() return aim_TC end)
+	SettingsManager.register("aimbot2WallCheck", function() return aim_WC end)
+	SettingsManager.register("aimbot2FOVRadius", function() return FOV_RADIUS end)
+	
+	-- Apply saved states to UI
+	aimBtn.Text = "Aimbot-" .. (aim_On and "ON" or "OFF")
+	teamBtn.Text = "TeamCheck-" .. (aim_TC and "ON" or "OFF")
+	wallBtn.Text = "WallCheck-" .. (aim_WC and "ON" or "OFF")
 	local TARGET_PART = "Head"
 	
 	-- INTERNAL (Stickiness locked to 100%)
@@ -10638,8 +10791,14 @@ task.spawn(C_1e2);
 local function C_1e6()
 local script = G2L["1e6"];
 	local but = script.Parent
-	local u = false
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	local u = SettingsManager.get("darkMode", false)
+	SettingsManager.register("darkMode", function() return u end)
 	local dark = game.Players.LocalPlayer.PlayerGui.HHHHAAAACCCCKKKK.drk
+	
+	-- Apply saved state on load
+	dark.Visible = u
+	but.Text = u and "Light Mode" or "Dark Mode"
 	
 	but.Activated:Connect(function()
 		u = not u
@@ -10689,7 +10848,13 @@ local script = G2L["1ee"];
 		Up    = "rbxassetid://15541544752"
 	}
 	
-	but.Activated:Connect(function()
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	-- Register theme getter using the ScreenGui attribute
+	local hhhhGui = player.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK")
+	SettingsManager.register("theme", function() return hhhhGui:GetAttribute("CurrentTheme") end)
+	
+	local function applyTheme()
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://95449354283188"
 		cor.BackgroundColor3 = targetColor
@@ -10738,7 +10903,6 @@ local script = G2L["1ee"];
 				child.BackgroundColor3 = targetColor
 				child.TextColor3 = targetColor2
 			elseif child:IsA("Frame") and child.Name ~= "txbas" then
-				-- Volitelně barvit i pozadí vnitřních rámečků
 				child.BackgroundColor3 = targetColor
 			end
 		end
@@ -10775,6 +10939,17 @@ local script = G2L["1ee"];
 		Lighting.GlobalShadows = true
 		Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
 		Lighting.ClockTime = 14
+	end
+	
+	-- Apply saved theme on load
+	if SettingsManager.get("theme") == "normal" then
+		hhhhGui:SetAttribute("CurrentTheme", "normal")
+		task.spawn(applyTheme)
+	end
+	
+	but.Activated:Connect(function()
+		hhhhGui:SetAttribute("CurrentTheme", "normal")
+		applyTheme()
 	end)
 	
 	-- ANIMACE TLAČÍTKA
@@ -10822,7 +10997,9 @@ local script = G2L["1f3"];
 		Up    = "http://www.roblox.com/asset/?id=17279864507"
 	}
 	
-	but.Activated:Connect(function()
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	local function applyTheme()
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://72612072480119"
 		cor.BackgroundColor3 = targetColor
@@ -10869,7 +11046,6 @@ local script = G2L["1f3"];
 	
 		-- 4. AUTOMATICKÉ BARVENÍ (S VÝJIMKOU PRO GUI3)
 		for _, child in ipairs(main:GetDescendants()) do
-			-- KONTROLA: Pokud je objekt uvnitř GUI3, přeskočíme barvení
 			if not child:IsDescendantOf(gui3) then
 				if child:IsA("TextButton") or child:IsA("TextBox") or child:IsA("TextLabel") then 
 					child.BackgroundColor3 = targetColor
@@ -10911,6 +11087,17 @@ local script = G2L["1f3"];
 		Lighting.GlobalShadows = true
 		Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
 		Lighting.ClockTime = 14
+	end
+	
+	-- Apply saved theme on load
+	if SettingsManager.get("theme") == "amethyst" then
+		hhhh:SetAttribute("CurrentTheme", "amethyst")
+		task.spawn(applyTheme)
+	end
+	
+	but.Activated:Connect(function()
+		hhhh:SetAttribute("CurrentTheme", "amethyst")
+		applyTheme()
 	end)
 	
 	-- ANIMACE TLAČÍTKA
@@ -10956,7 +11143,9 @@ local script = G2L["1f8"];
 		Up    = "http://www.roblox.com/asset/?id=245710496"
 	}
 	
-	but.Activated:Connect(function()
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	local function applyTheme()
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://87950646064156"
 		task.wait(0.05)
@@ -11046,7 +11235,17 @@ local script = G2L["1f8"];
 		Lighting.GlobalShadows = true
 		Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
 		Lighting.ClockTime = 14
-		task.wait()
+	end
+	
+	-- Apply saved theme on load
+	if SettingsManager.get("theme") == "frutiger" then
+		hhhh:SetAttribute("CurrentTheme", "frutiger")
+		task.spawn(applyTheme)
+	end
+	
+	but.Activated:Connect(function()
+		hhhh:SetAttribute("CurrentTheme", "frutiger")
+		applyTheme()
 	end)
 	
 	-- ANIMACE TLAČÍTKA
@@ -11091,7 +11290,9 @@ local script = G2L["1fd"];
 		Up    = "http://www.roblox.com/asset/?id=4498831746"
 	}
 	
-	but.Activated:Connect(function()
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
+	
+	local function applyTheme()
 		-- 1. OBRÁZKY
 		hltbar.bar.imag.Image = "rbxassetid://135907340809252"
 		gui5.grs.a.Image = "rbxassetid://70725559734526"
@@ -11111,7 +11312,7 @@ local script = G2L["1fd"];
 		root.BackgroundTransparency = 0
 		root.BackgroundColor3 = Color3.fromRGB(6, 6, 6)
 	
-		-- 3. HROMADNÉ BARVENÍ PANELŮ (S tvými specifickými barvami)
+		-- 3. HROMADNÉ BARVENÍ PANELŮ
 		local darkPanels = {main.Parent.Bar, main.Gu.thm.shw, main.barr}
 		for _, obj in ipairs(darkPanels) do
 			if obj then obj.BackgroundColor3 = darkBg end
@@ -11125,7 +11326,7 @@ local script = G2L["1fd"];
 		fs.BackgroundColor3 = targetColor
 		fs.TextColor3 = targetColor2
 	
-		-- 4. AUTOMATICKÉ BARVENÍ TXBAS (Včetně tlačítek uvnitř Frame)
+		-- 4. AUTOMATICKÉ BARVENÍ TXBAS
 		for _, child in ipairs(main:GetDescendants()) do
 			if child:IsA("TextButton") or child:IsA("TextBox") or child:IsA("TextLabel") then 
 				child.BackgroundColor3 = targetColor
@@ -11179,6 +11380,17 @@ local script = G2L["1fd"];
 		nrm.BackgroundTransparency = 0.5
 		sky.BackgroundColor3 = grayish
 		sky.TextColor3 = white
+	end
+	
+	-- Apply saved theme on load
+	if SettingsManager.get("theme") == "grayskynight" then
+		hhhh:SetAttribute("CurrentTheme", "grayskynight")
+		task.spawn(applyTheme)
+	end
+	
+	but.Activated:Connect(function()
+		hhhh:SetAttribute("CurrentTheme", "grayskynight")
+		applyTheme()
 	end)
 	
 	-- ANIMACE TLAČÍTKA
@@ -11280,8 +11492,12 @@ local function C_210()
 local script = G2L["210"];
 	local Lighting = game:GetService("Lighting")
 	local but = script.Parent
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
-	local SHADOWS_ENABLED = true
+	local SHADOWS_ENABLED = SettingsManager.get("globalShadows", true)
+	SettingsManager.register("globalShadows", function() return SHADOWS_ENABLED end)
+	Lighting.GlobalShadows = SHADOWS_ENABLED
+	but.Text = SHADOWS_ENABLED and "Global Shadows-ON" or "Global Shadows-OFF"
 	
 	but.Activated:Connect(function()
 		SHADOWS_ENABLED = not SHADOWS_ENABLED
@@ -11325,36 +11541,39 @@ local function C_216()
 local script = G2L["216"];
 	local Lighting = game:GetService("Lighting")
 	local button = script.Parent
+	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
 	-- 1. CAPTURE ORIGINAL SETTINGS
-	-- We do this outside the function so it only happens ONCE when you join.
 	local originalFogEnd = Lighting.FogEnd
 	local originalFogStart = Lighting.FogStart
 	local originalColor = Lighting.FogColor
 	
-	-- Check if there is an Atmosphere object (modern Roblox fog)
 	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
 	local originalDensity = atmosphere and atmosphere.Density or 0
 	
-	local isOptimized = false
+	local isOptimized = SettingsManager.get("fogOff", false)
+	SettingsManager.register("fogOff", function() return isOptimized end)
+	
+	-- Apply saved state on load
+	if isOptimized then
+		Lighting.FogEnd = 100000000
+		if atmosphere then atmosphere.Density = 0 end
+		button.Text = "Fog-OFF (Optimized)"
+	else
+		button.Text = "Fog-ON (Original)"
+	end
 	
 	button.MouseButton1Click:Connect(function()
 		isOptimized = not isOptimized
 	
 		if isOptimized then
-			-- TURN FOG OFF (Optimization Mode)
-			Lighting.FogEnd = 100000000 -- Moves fog so far away you can't see it
-			if atmosphere then
-				atmosphere.Density = 0 -- Makes the air perfectly clear
-			end
+			Lighting.FogEnd = 100000000
+			if atmosphere then atmosphere.Density = 0 end
 			button.Text = "Fog-OFF (Optimized)"
 		else
-			-- RESTORE ORIGINAL FOG
 			Lighting.FogEnd = originalFogEnd
 			Lighting.FogStart = originalFogStart
-			if atmosphere then
-				atmosphere.Density = originalDensity
-			end
+			if atmosphere then atmosphere.Density = originalDensity end
 			button.Text = "Fog-ON (Original)"
 		end
 	end)
