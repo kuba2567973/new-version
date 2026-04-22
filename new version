@@ -9587,6 +9587,7 @@ local script = G2L["1aa"];
 	end
 	
 	-- NEW: Function to check if our current target is still valid
+	-- UPDATED: Function to check if our current target is still valid
 	local function isTargetValid(part)
 		if not part or not part.Parent then return false end
 	
@@ -9594,13 +9595,19 @@ local script = G2L["1aa"];
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		local plr = Players:GetPlayerFromCharacter(char)
 	
-		-- Check if they are dead, missing a humanoid, or have a forcefield
+		-- 1. Check if they are dead, missing, or have a forcefield
 		if not hum or hum.Health <= 0 or hasForceField(char) then
 			return false
 		end
 	
-		-- Check if they switched to your team while you were aiming
+		-- 2. Check if they switched to your team
 		if aim_TC and plr and plr.Team == lp.Team then
+			return false
+		end
+	
+		-- 3. FIX: Check if a wall is now blocking the view
+		-- This forces the aimbot to unlock if you or they go behind a wall
+		if aim_WC and not wallCheck(char, part) then
 			return false
 		end
 	
