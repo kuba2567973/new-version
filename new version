@@ -12071,24 +12071,23 @@ local script = G2L["227"];
 		hidePlayers()
 	end
 	
-	local RENDER_DISTANCE = 250 -- tweak: 150 = very low, 250 = medium, 400 = high
+	local RENDER_DISTANCE = 500 -- tweak: 150 = very low, 250 = medium, 400 = high
 	
 	local function updateRenderDistance()
 		local camera = workspace.CurrentCamera
 		if not camera then return end
 	
 		local camPos = camera.CFrame.Position
+		-- Místo GetDescendants() pracujeme jen s věcmi, které jsou vidět nebo blízko
+		-- Ideálně omez RENDER_DISTANCE jen na dekorace, ne na podlahu!
 	
-		for _, obj in pairs(workspace:GetDescendants()) do
+		local objects = workspace:GetChildren() -- Mnohem rychlejší
+		for i, obj in pairs(objects) do
+			if i % 50 == 0 then task.wait() end -- Zásadní: uvolní procesor
+	
 			if obj:IsA("BasePart") then
 				local dist = (obj.Position - camPos).Magnitude
-	
-				if dist > RENDER_DISTANCE then
-					obj.LocalTransparencyModifier = 1
-					obj.CastShadow = false
-				else
-					obj.LocalTransparencyModifier = 0
-				end
+				obj.LocalTransparencyModifier = (dist > RENDER_DISTANCE) and 1 or 0
 			end
 		end
 	end
@@ -12173,15 +12172,16 @@ local script = G2L["227"];
 	
 		task.spawn(function()
 			while enabled do
-				applyUltra()
+				-- ApplyUltra zavolej jen jednou při zapnutí, ne v loopu!
 				cleanDebris()
 				updateRenderDistance()
-				removeAccessories()
-				task.wait(3)
+				-- removeAccessories() -- Tohle taky laguje, dělej to jen u nových hráčů
+				task.wait(5) -- Zvyš interval, 3 sekundy jsou zbytečně málo
 			end
 			loopRunning = false
 		end)
 	end
+	
 	
 	-- BUTTON
 	button.MouseButton1Click:Connect(function()
@@ -12496,7 +12496,7 @@ local script = G2L["289"];
 	
 	but2.Activated:Connect(function()
 		vis = not vis
-		if vis then
+		if vis == false then
 			but2.Text = "Debug fps-OFF"
 			but.Visible = false
 		else
