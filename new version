@@ -11935,22 +11935,35 @@ local script = G2L["227"];
 	end
 	
 	-- CLEAN DEBRIS (ragdolls, loose parts)
-	local function cleanDebris()
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if obj:IsA("BasePart") and not obj.Anchored then
-				local model = obj:FindFirstAncestorOfClass("Model")
+	local Players = game:GetService("Players")
+	local Debris = game:GetService("Debris")
 	
-				if model then
-					local humanoid = model:FindFirstChildOfClass("Humanoid")
-					if humanoid and humanoid.Health <= 0 then
-						model:Destroy()
+	local function cleanDebris()
+		-- Optimalizace: Procházíme jen přímé potomky složky (pokud ji máš) 
+		-- nebo workspace, ale s pauzami.
+		local objects = workspace:GetChildren() -- GetChildren je rychlejší než GetDescendants
+	
+		for i, model in pairs(objects) do
+			-- Kontrola každých 20 objektů, aby se ulevilo CPU
+			if i % 20 == 0 then task.wait() end
+	
+			if model:IsA("Model") then
+				local humanoid = model:FindFirstChildOfClass("Humanoid")
+	
+				-- Pokud je to mrtvé NPC (není to hráč)
+				if humanoid and humanoid.Health <= 0 then
+					if not Players:GetPlayerFromCharacter(model) then
+						-- Debris zajistí smazání bez okamžitého záseku
+						Debris:AddItem(model, 0.1)
 					end
-				else
-					obj:Destroy()
 				end
+			elseif model:IsA("BasePart") and not model.Anchored then
+				-- Smaže volné části, které nejsou ukotvené
+				Debris:AddItem(model, 0.1)
 			end
 		end
 	end
+	
 	
 	-- HIDE OTHER PLAYERS (huge FPS boost)
 	local function hidePlayers()
