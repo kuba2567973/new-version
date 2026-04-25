@@ -9872,12 +9872,15 @@ task.spawn(C_1bb);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs.ambo.LocalScript
 local function C_1c1()
 local script = G2L["1c1"];
+	-- PREVENT DOUBLE RUN
+	if _G.AIMBOT_RUNNING then return end
+	_G.AIMBOT_RUNNING = true
+	
 	-- SERVICES
 	local UIS = game:GetService("UserInputService")
 	local RS = game:GetService("RunService")
 	local Players = game:GetService("Players")
 	
-	-- Link to your specific saving system
 	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
 	local lp = Players.LocalPlayer
@@ -9891,7 +9894,7 @@ local script = G2L["1c1"];
 	local shwfvrad = menu:WaitForChild("shfv")
 	local rnbwBtn = menu:WaitForChild("rnbw")
 	
-	-- Load initial values from your saving system
+	-- LOAD SETTINGS
 	local aim_On = SettingsManager.get("aimbot", false)
 	local aim_TC = SettingsManager.get("aimbotTeamCheck", true)
 	local aim_WC = SettingsManager.get("aimbotWallCheck", true)
@@ -9905,8 +9908,7 @@ local script = G2L["1c1"];
 	local hue = 0
 	
 	---------------------------------------------------
-	-- REGISTER STATES FOR AUTO-SAVE
-	-- This is the part that was missing!
+	-- SAVE REGISTRATION
 	---------------------------------------------------
 	SettingsManager.register("aimbot", function() return aim_On end)
 	SettingsManager.register("aimbotTeamCheck", function() return aim_TC end)
@@ -9915,16 +9917,40 @@ local script = G2L["1c1"];
 	SettingsManager.register("aimbotRGB", function() return rainbow end)
 	SettingsManager.register("aimbotFOVRadius", function() return FOV_RADIUS end)
 	
-	-- Update UI text to match loaded saves
-	local function updateUI()
+	---------------------------------------------------
+	-- UI UPDATE (SEPARATED)
+	---------------------------------------------------
+	local function updateAimUI()
 		aimBtn.Text = "Aimbot-" .. (aim_On and "ON" or "OFF")
+	end
+	
+	local function updateTeamUI()
 		teamBtn.Text = "TeamCheck-" .. (aim_TC and "ON" or "OFF")
+	end
+	
+	local function updateWallUI()
 		wallBtn.Text = "WallCheck-" .. (aim_WC and "ON" or "OFF")
+	end
+	
+	local function updateFOVUI()
 		shwfvrad.Text = "ShowFOV-" .. (showFOV and "ON" or "OFF")
+	end
+	
+	local function updateRGBUI()
 		rnbwBtn.Text = "RGB-" .. (rainbow and "ON" or "OFF")
+	end
+	
+	local function updateRadiusUI()
 		radiustxtbox.Text = tostring(FOV_RADIUS)
 	end
-	updateUI()
+	
+	-- INITIAL UI SYNC
+	updateAimUI()
+	updateTeamUI()
+	updateWallUI()
+	updateFOVUI()
+	updateRGBUI()
+	updateRadiusUI()
 	
 	---------------------------------------------------
 	-- FOV CIRCLE
@@ -9966,102 +9992,113 @@ local script = G2L["1c1"];
 		end
 	end
 	
-	-----------------------------------
-	-- BUTTONS & TEXTBOX
-	-----------------------------------
+	---------------------------------------------------
+	-- BUTTONS
+	---------------------------------------------------
 	radiustxtbox.FocusLost:Connect(function()
 		local num = tonumber(radiustxtbox.Text)
-		if num then 
-			FOV_RADIUS = math.clamp(num, 0.1, 9999) 
+		if num then
+			FOV_RADIUS = math.clamp(num, 0.1, 9999)
+			updateRadiusUI()
 		end
 	end)
 	
 	aimBtn.MouseButton1Click:Connect(function()
 		aim_On = not aim_On
-		updateUI()
+		updateAimUI()
 	end)
 	
 	teamBtn.MouseButton1Click:Connect(function()
 		aim_TC = not aim_TC
-		updateUI()
+		updateTeamUI()
 	end)
 	
 	wallBtn.MouseButton1Click:Connect(function()
 		aim_WC = not aim_WC
-		updateUI()
+		updateWallUI()
 	end)
 	
 	shwfvrad.MouseButton1Click:Connect(function()
 		showFOV = not showFOV
-		updateUI()
+		updateFOVUI()
 	end)
 	
 	rnbwBtn.MouseButton1Click:Connect(function()
 		rainbow = not rainbow
-		updateUI()
+		updateRGBUI()
 	end)
 	
-	-----------------------------------
-	-- CHECKS & LOGIC
-	-----------------------------------
+	---------------------------------------------------
+	-- CHECKS
+	---------------------------------------------------
 	local function isTeammate(plr)
 		if not aim_TC then return false end
 		if plr.Team ~= nil and lp.Team ~= nil then
-			if plr.Team == lp.Team then return true end
+			return plr.Team == lp.Team
 		end
-		return plr.TeamColor == lp.TeamColor
+		return false
 	end
 	
 	local function wallCheck(char, part)
 		if not aim_WC then return true end
 		local origin = cam.CFrame.Position
 		local direction = (part.Position - origin)
+	
 		local params = RaycastParams.new()
 		params.FilterType = Enum.RaycastFilterType.Exclude
 		params.FilterDescendantsInstances = {lp.Character, cam}
+	
 		local result = workspace:Raycast(origin, direction, params)
 		return result == nil or result.Instance:IsDescendantOf(char)
 	end
 	
 	local function isTargetValid(part)
 		if not part or not part.Parent then return false end
+	
 		local char = part.Parent
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		local plr = Players:GetPlayerFromCharacter(char)
+	
 		if not hum or hum.Health <= 0 then return false end
 		if plr and isTeammate(plr) then return false end
 		if aim_WC and not wallCheck(char, part) then return false end
+	
 		return true
 	end
 	
 	local function getTarget()
 		local closestDist = FOV_RADIUS
 		local closestPart = nil
+	
 		local viewport = cam.ViewportSize
 		local center = Vector2.new(viewport.X / 2, viewport.Y / 2)
 	
 		for _, plr in ipairs(Players:GetPlayers()) do
 			if plr == lp or isTeammate(plr) then continue end
+	
 			local char = plr.Character
 			local part = char and char:FindFirstChild(TARGET_PART)
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
+	
 			if not part or not hum or hum.Health <= 0 then continue end
 	
 			local screenPos, onScreen = cam:WorldToViewportPoint(part.Position)
 			if not onScreen then continue end
 	
 			local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+	
 			if dist < closestDist and wallCheck(char, part) then
 				closestDist = dist
 				closestPart = part
 			end
 		end
+	
 		return closestPart
 	end
 	
-	-----------------------------------
-	-- INPUTS & LOOP
-	-----------------------------------
+	---------------------------------------------------
+	-- INPUT + LOOP
+	---------------------------------------------------
 	UIS.InputBegan:Connect(function(input, gpe)
 		if not gpe and input.UserInputType == Enum.UserInputType.MouseButton2 then
 			aiming = true
@@ -10077,6 +10114,7 @@ local script = G2L["1c1"];
 	
 	RS.RenderStepped:Connect(function()
 		updateFOVCircle()
+	
 		if not aim_On or not aiming then return end
 	
 		if lockedTarget and not isTargetValid(lockedTarget) then
