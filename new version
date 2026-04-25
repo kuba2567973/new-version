@@ -4221,6 +4221,7 @@ G2L["1be"]["Position"] = UDim2.new(0.01023, 0, -0.08152, 0);
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.AmEs
 G2L["1bf"] = Instance.new("Frame", G2L["1a"]);
+G2L["1bf"]["Visible"] = false;
 G2L["1bf"]["Active"] = true;
 G2L["1bf"]["ZIndex"] = 10;
 G2L["1bf"]["BorderSizePixel"] = 0;
@@ -5161,7 +5162,6 @@ G2L["222"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Gra
 G2L["223"] = Instance.new("Frame", G2L["1a"]);
-G2L["223"]["Visible"] = false;
 G2L["223"]["ZIndex"] = 10;
 G2L["223"]["BorderSizePixel"] = 0;
 G2L["223"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
@@ -11708,28 +11708,21 @@ local script = G2L["226"];
 	local button = script.Parent
 	local Lighting = game:GetService("Lighting")
 	local Players = game:GetService("Players")
+	local Debris = game:GetService("Debris")
 	local Terrain = workspace:FindFirstChildOfClass("Terrain")
 	
 	local enabled = false
 	local loopRunning = false
 	
-	-- Store originals
-	local originalLighting = {
-		GlobalShadows = Lighting.GlobalShadows,
-		Brightness = Lighting.Brightness,
-		EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
-		EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
+	-- Storage for original settings
+	local originalSettings = {
+		Lighting = {},
+		Parts = {},
+		Textures = {},
+		Particles = {},
+		Meshes = {},
+		Effects = {}
 	}
-	
-	local originalParts = {}
-	local originalTextures = {}
-	local originalEffects = {}
-	local originalParticles = {}
-	local originalMeshes = {}
-	local hiddenCharacters = {}
-	
-	-- Sky
-	local originalSky = Lighting:FindFirstChildOfClass("Sky")
 	
 	local darkSky = Instance.new("Sky")
 	darkSky.SkyboxBk = "rbxassetid://2350402582"
@@ -11741,213 +11734,91 @@ local script = G2L["226"];
 	darkSky.SunTextureId = ""
 	darkSky.MoonTextureId = ""
 	
-	-- Terrain safe
-	local originalTerrainDecoration
-	if Terrain then
-		pcall(function()
-			originalTerrainDecoration = Terrain.Decoration
-		end)
-	end
-	
-	-- CLEAN DEBRIS (ragdolls, loose parts)
-	local Players = game:GetService("Players")
-	local Debris = game:GetService("Debris")
-	
 	local function cleanDebris()
-		-- Optimalizace: Procházíme jen přímé potomky složky (pokud ji máš) 
-		-- nebo workspace, ale s pauzami.
-		local objects = workspace:GetChildren() -- GetChildren je rychlejší než GetDescendants
-	
+		local objects = workspace:GetChildren()
 		for i, model in pairs(objects) do
-			-- Kontrola každých 20 objektů, aby se ulevilo CPU
 			if i % 20 == 0 then task.wait() end
 	
 			if model:IsA("Model") then
 				local humanoid = model:FindFirstChildOfClass("Humanoid")
-	
-				-- Pokud je to mrtvé NPC (není to hráč)
 				if humanoid and humanoid.Health <= 0 then
 					if not Players:GetPlayerFromCharacter(model) then
-						-- Debris zajistí smazání bez okamžitého záseku
 						Debris:AddItem(model, 0.1)
 					end
 				end
 			elseif model:IsA("BasePart") and not model.Anchored then
-				-- Smaže volné části, které nejsou ukotvené
-				Debris:AddItem(model, 0.1)
-			end
-		end
-	end
-	
-	
-	-- HIDE OTHER PLAYERS (huge FPS boost)
-	local function hidePlayers()
-		for _, player in pairs(Players:GetPlayers()) do
-			if player ~= Players.LocalPlayer then
-				local char = player.Character
-				if char and not hiddenCharacters[char] then
-					hiddenCharacters[char] = true
-					char.Parent = nil
+				-- Only delete if it's not a player part
+				if not model:FindFirstAncestorOfClass("Model") or not Players:GetPlayerFromCharacter(model.Parent) then
+					Debris:AddItem(model, 0.1)
 				end
 			end
 		end
 	end
 	
-	local function restorePlayers()
-		for char, _ in pairs(hiddenCharacters) do
-			if char then
-				char.Parent = workspace
-			end
-		end
-		hiddenCharacters = {}
-	end
-	
-	-- APPLY
 	local function applyUltra()
+		-- Save & Apply Lighting
+		originalSettings.Lighting.GlobalShadows = Lighting.GlobalShadows
+		originalSettings.Lighting.Brightness = Lighting.Brightness
+		originalSettings.Lighting.EnvDiffuse = Lighting.EnvironmentDiffuseScale
+		originalSettings.Lighting.EnvSpecular = Lighting.EnvironmentSpecularScale
+	
 		Lighting.GlobalShadows = false
 		Lighting.Brightness = 1
 		Lighting.EnvironmentDiffuseScale = 0
 		Lighting.EnvironmentSpecularScale = 0
 	
-		-- Effects
-		for _, v in pairs(Lighting:GetChildren()) do
-			if v:IsA("PostEffect") then
-				if originalEffects[v] == nil then
-					originalEffects[v] = v.Enabled
-				end
-				v.Enabled = false
-			end
-		end
-	
 		-- Sky
-		if originalSky and originalSky.Parent then
-			originalSky.Parent = nil
+		local oldSky = Lighting:FindFirstChildOfClass("Sky")
+		if oldSky then 
+			originalSettings.Lighting.Sky = oldSky
+			oldSky.Parent = nil 
 		end
-		if not darkSky.Parent then
-			darkSky.Parent = Lighting
-		end
+		darkSky.Parent = Lighting
 	
-		-- Terrain
-		if Terrain then
-			pcall(function()
-				Terrain.Decoration = false
-				Terrain.WaterWaveSize = 0
-				Terrain.WaterWaveSpeed = 0
-				Terrain.WaterReflectance = 0
-				Terrain.WaterTransparency = 1
-			end)
-		end
-	
+		-- Process Workspace
 		for _, obj in pairs(workspace:GetDescendants()) do
+			-- Don't mess with Player Characters
+			if Players:GetPlayerFromCharacter(obj) or obj:FindFirstAncestorOfClass("Player") then 
+				continue 
+			end
 	
 			if obj:IsA("BasePart") then
-				if originalParts[obj] == nil then
-					originalParts[obj] = {
-						Material = obj.Material,
-						CastShadow = obj.CastShadow,
-						Reflectance = obj.Reflectance,
-					}
-				end
-	
+				originalSettings.Parts[obj] = {
+					Material = obj.Material,
+					CastShadow = obj.CastShadow,
+					Reflectance = obj.Reflectance
+				}
 				obj.Material = Enum.Material.SmoothPlastic
 				obj.CastShadow = false
 				obj.Reflectance = 0
-			end
-	
-			if obj:IsA("Texture") or obj:IsA("Decal") then
-				if originalTextures[obj] == nil then
-					originalTextures[obj] = obj.Transparency
-				end
+			elseif obj:IsA("Texture") or obj:IsA("Decal") then
+				originalSettings.Textures[obj] = obj.Transparency
 				obj.Transparency = 1
-			end
-	
-			if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-				if originalParticles[obj] == nil then
-					originalParticles[obj] = obj.Enabled
-				end
+			elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+				originalSettings.Particles[obj] = obj.Enabled
 				obj.Enabled = false
-			end
-	
-			if obj:IsA("MeshPart") then
-				if originalMeshes[obj] == nil then
-					originalMeshes[obj] = obj.TextureID
-				end
-				obj.TextureID = ""
-			elseif obj:IsA("SpecialMesh") then
-				if originalMeshes[obj] == nil then
-					originalMeshes[obj] = obj.TextureId
-				end
-				obj.TextureId = ""
-			end
-		end
-	
-		-- Extra FPS
-		cleanDebris()
-		hidePlayers()
-	end
-	
-	local RENDER_DISTANCE = 500 -- tweak: 150 = very low, 250 = medium, 400 = high
-	
-	local function updateRenderDistance()
-		local camera = workspace.CurrentCamera
-		if not camera then return end
-	
-		local camPos = camera.CFrame.Position
-		-- Místo GetDescendants() pracujeme jen s věcmi, které jsou vidět nebo blízko
-		-- Ideálně omez RENDER_DISTANCE jen na dekorace, ne na podlahu!
-	
-		local objects = workspace:GetChildren() -- Mnohem rychlejší
-		for i, obj in pairs(objects) do
-			if i % 50 == 0 then task.wait() end -- Zásadní: uvolní procesor
-	
-			if obj:IsA("BasePart") then
-				local dist = (obj.Position - camPos).Magnitude
-				obj.LocalTransparencyModifier = (dist > RENDER_DISTANCE) and 1 or 0
+			elseif obj:IsA("MeshPart") or obj:IsA("SpecialMesh") then
+				local idProp = obj:IsA("MeshPart") and "TextureID" or "TextureId"
+				originalSettings.Meshes[obj] = obj[idProp]
+				obj[idProp] = ""
 			end
 		end
 	end
 	
-	local function removeAccessories()
-		for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-			local char = player.Character
-			if char then
-				for _, obj in pairs(char:GetChildren()) do
-					if obj:IsA("Accessory") then
-						obj:Destroy()
-					end
-				end
-			end
-		end
-	end
-	
-	-- RESTORE
 	local function restoreAll()
-		for k, v in pairs(originalLighting) do
-			Lighting[k] = v
+		-- Restore Lighting
+		Lighting.GlobalShadows = originalSettings.Lighting.GlobalShadows
+		Lighting.Brightness = originalSettings.Lighting.Brightness
+		Lighting.EnvironmentDiffuseScale = originalSettings.Lighting.EnvDiffuse
+		Lighting.EnvironmentSpecularScale = originalSettings.Lighting.EnvSpecular
+	
+		darkSky.Parent = nil
+		if originalSettings.Lighting.Sky then
+			originalSettings.Lighting.Sky.Parent = Lighting
 		end
 	
-		if darkSky.Parent then
-			darkSky.Parent = nil
-		end
-		if originalSky then
-			originalSky.Parent = Lighting
-		end
-	
-		for obj, state in pairs(originalEffects) do
-			if obj and obj.Parent then
-				obj.Enabled = state
-			end
-		end
-	
-		if Terrain then
-			pcall(function()
-				if originalTerrainDecoration ~= nil then
-					Terrain.Decoration = originalTerrainDecoration
-				end
-			end)
-		end
-	
-		for part, data in pairs(originalParts) do
+		-- Restore Parts
+		for part, data in pairs(originalSettings.Parts) do
 			if part and part.Parent then
 				part.Material = data.Material
 				part.CastShadow = data.CastShadow
@@ -11955,59 +11826,48 @@ local script = G2L["226"];
 			end
 		end
 	
-		for tex, state in pairs(originalTextures) do
-			if tex and tex.Parent then
-				tex.Transparency = state
-			end
+		-- Restore Textures
+		for tex, trans in pairs(originalSettings.Textures) do
+			if tex and tex.Parent then tex.Transparency = trans end
 		end
 	
-		for obj, state in pairs(originalParticles) do
-			if obj and obj.Parent then
-				obj.Enabled = state
-			end
+		-- Restore Particles
+		for effect, state in pairs(originalSettings.Particles) do
+			if effect and effect.Parent then effect.Enabled = state end
 		end
 	
-		for mesh, tex in pairs(originalMeshes) do
+		-- Restore Meshes
+		for mesh, id in pairs(originalSettings.Meshes) do
 			if mesh and mesh.Parent then
-				if mesh:IsA("MeshPart") then
-					mesh.TextureID = tex
-				elseif mesh:IsA("SpecialMesh") then
-					mesh.TextureId = tex
-				end
+				local idProp = mesh:IsA("MeshPart") and "TextureID" or "TextureId"
+				mesh[idProp] = id
 			end
 		end
 	
-		restorePlayers()
+		-- Clear tables to prevent memory leaks
+		originalSettings.Parts = {}
+		originalSettings.Textures = {}
+		originalSettings.Particles = {}
+		originalSettings.Meshes = {}
 	end
 	
-	-- LOOP
-	local function startLoop()
-		if loopRunning then return end
-		loopRunning = true
-	
-		task.spawn(function()
-			while enabled do
-				-- ApplyUltra zavolej jen jednou při zapnutí, ne v loopu!
-				cleanDebris()
-				updateRenderDistance()
-				-- removeAccessories() -- Tohle taky laguje, dělej to jen u nových hráčů
-				task.wait(5) -- Zvyš interval, 3 sekundy jsou zbytečně málo
-			end
-			loopRunning = false
-		end)
-	end
-	
-	
-	-- BUTTON
+	-- MAIN BUTTON LOGIC
 	button.MouseButton1Click:Connect(function()
 		enabled = not enabled
-		button.Text = "Potato mode🤑🤑-ON"
 		if enabled then
 			applyUltra()
-			startLoop()
+			button.Text = "Potato mode🤑-ON"
+	
+			-- Start Loop
+			task.spawn(function()
+				while enabled do
+					cleanDebris()
+					task.wait(5)
+				end
+			end)
 		else
 			restoreAll()
-			button.Text = "Normal mode🥀✌️-OFF"
+			button.Text = "Normal mode🥀-OFF"
 		end
 	end)
 end;
