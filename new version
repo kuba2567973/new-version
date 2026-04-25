@@ -9881,10 +9881,11 @@ local script = G2L["1c1"];
 	local RS = game:GetService("RunService")
 	local Players = game:GetService("Players")
 	
-	local SettingsManager = require(game.Players.LocalPlayer.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
-	
 	local lp = Players.LocalPlayer
 	local cam = workspace.CurrentCamera
+	
+	-- Attempt to get SettingsManager
+	local SettingsManager = require(lp.PlayerGui:WaitForChild("HHHHAAAACCCCKKKK"):WaitForChild("SettingsManager"))
 	
 	local menu = script.Parent.Parent
 	local aimBtn = menu:WaitForChild("ambo")
@@ -9894,7 +9895,7 @@ local script = G2L["1c1"];
 	local shwfvrad = menu:WaitForChild("shfv")
 	local rnbwBtn = menu:WaitForChild("rnbw")
 	
-	-- LOAD SETTINGS
+	-- INITIAL SETTINGS
 	local aim_On = SettingsManager.get("aimbot", false)
 	local aim_TC = SettingsManager.get("aimbotTeamCheck", true)
 	local aim_WC = SettingsManager.get("aimbotWallCheck", true)
@@ -9908,84 +9909,68 @@ local script = G2L["1c1"];
 	local hue = 0
 	
 	---------------------------------------------------
-	-- SAVE REGISTRATION
+	-- UI SYNC (Independent)
 	---------------------------------------------------
-	SettingsManager.register("aimbot", function() return aim_On end)
-	SettingsManager.register("aimbotTeamCheck", function() return aim_TC end)
-	SettingsManager.register("aimbotWallCheck", function() return aim_WC end)
-	SettingsManager.register("aimbotShowFOV", function() return showFOV end)
-	SettingsManager.register("aimbotRGB", function() return rainbow end)
-	SettingsManager.register("aimbotFOVRadius", function() return FOV_RADIUS end)
-	
-	---------------------------------------------------
-	-- UI UPDATE (SEPARATED)
-	---------------------------------------------------
-	local function updateAimUI()
+	local function updateAimBtn()
 		aimBtn.Text = "Aimbot-" .. (aim_On and "ON" or "OFF")
 	end
 	
-	local function updateTeamUI()
+	local function updateTeamBtn()
 		teamBtn.Text = "TeamCheck-" .. (aim_TC and "ON" or "OFF")
 	end
 	
-	local function updateWallUI()
+	local function updateWallBtn()
 		wallBtn.Text = "WallCheck-" .. (aim_WC and "ON" or "OFF")
 	end
 	
-	local function updateFOVUI()
+	local function updateFovUI()
 		shwfvrad.Text = "ShowFOV-" .. (showFOV and "ON" or "OFF")
-	end
-	
-	local function updateRGBUI()
-		rnbwBtn.Text = "RGB-" .. (rainbow and "ON" or "OFF")
-	end
-	
-	local function updateRadiusUI()
 		radiustxtbox.Text = tostring(FOV_RADIUS)
 	end
 	
-	-- INITIAL UI SYNC
-	updateAimUI()
-	updateTeamUI()
-	updateWallUI()
-	updateFOVUI()
-	updateRGBUI()
-	updateRadiusUI()
+	local function updateRnbwBtn()
+		rnbwBtn.Text = "RGB-" .. (rainbow and "ON" or "OFF")
+	end
+	
+	-- Init UI
+	updateAimBtn()
+	updateTeamBtn()
+	updateWallBtn()
+	updateFovUI()
+	updateRnbwBtn()
 	
 	---------------------------------------------------
-	-- FOV CIRCLE
+	-- FOV CIRCLE SETUP
 	---------------------------------------------------
-	local screenGui = Instance.new("ScreenGui")
+	local screenGui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
 	screenGui.Name = "FOVCircle"
 	screenGui.ResetOnSpawn = false
 	screenGui.IgnoreGuiInset = true
-	screenGui.Parent = lp:WaitForChild("PlayerGui")
 	
-	local fovCircle = Instance.new("Frame")
-	fovCircle.Parent = screenGui
+	local fovCircle = Instance.new("Frame", screenGui)
 	fovCircle.AnchorPoint = Vector2.new(0.5, 0.5)
 	fovCircle.BackgroundTransparency = 1
-	fovCircle.Visible = false
+	fovCircle.Visible = showFOV -- Always respects setting, ignores aim_On status
 	
-	local corner = Instance.new("UICorner")
+	local corner = Instance.new("UICorner", fovCircle)
 	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = fovCircle
 	
-	local stroke = Instance.new("UIStroke")
+	local stroke = Instance.new("UIStroke", fovCircle)
 	stroke.Thickness = 2
 	stroke.Color = Color3.fromRGB(255, 0, 0)
-	stroke.Parent = fovCircle
 	
-	local function updateFOVCircle()
+	local function updateVisuals()
+		-- Sync circle size and visibility to showFOV setting only
 		local viewport = cam.ViewportSize
-		local center = Vector2.new(viewport.X / 2, viewport.Y / 2)
-	
-		fovCircle.Position = UDim2.fromOffset(center.X, center.Y)
+		fovCircle.Visible = showFOV 
+		fovCircle.Position = UDim2.fromOffset(viewport.X / 2, viewport.Y / 2)
 		fovCircle.Size = UDim2.fromOffset(FOV_RADIUS * 2, FOV_RADIUS * 2)
-		fovCircle.Visible = showFOV
 	
-		if rainbow then
-			hue = tick() % 5 / 5
+		-- RGB Check: Checks local rainbow setting OR the global ESP rainbow setting
+		local globalESPRainbow = SettingsManager.get("espRGB", false) 
+	
+		if rainbow or globalESPRainbow then
+			hue = (tick() % 5) / 5
 			stroke.Color = Color3.fromHSV(hue, 1, 1)
 		else
 			stroke.Color = Color3.fromRGB(255, 0, 0)
@@ -9993,132 +9978,106 @@ local script = G2L["1c1"];
 	end
 	
 	---------------------------------------------------
-	-- BUTTONS
+	-- CORE FUNCTIONS
 	---------------------------------------------------
-	radiustxtbox.FocusLost:Connect(function()
-		local num = tonumber(radiustxtbox.Text)
-		if num then
-			FOV_RADIUS = math.clamp(num, 0.1, 9999)
-			updateRadiusUI()
-		end
-	end)
-	
-	aimBtn.MouseButton1Click:Connect(function()
-		aim_On = not aim_On
-		updateAimUI()
-	end)
-	
-	teamBtn.MouseButton1Click:Connect(function()
-		aim_TC = not aim_TC
-		updateTeamUI()
-	end)
-	
-	wallBtn.MouseButton1Click:Connect(function()
-		aim_WC = not aim_WC
-		updateWallUI()
-	end)
-	
-	shwfvrad.MouseButton1Click:Connect(function()
-		showFOV = not showFOV
-		updateFOVUI()
-	end)
-	
-	rnbwBtn.MouseButton1Click:Connect(function()
-		rainbow = not rainbow
-		updateRGBUI()
-	end)
-	
-	---------------------------------------------------
-	-- CHECKS
-	---------------------------------------------------
-	local function isTeammate(plr)
-		if not aim_TC then return false end
-		if plr.Team ~= nil and lp.Team ~= nil then
-			return plr.Team == lp.Team
-		end
-		return false
-	end
-	
-	local function wallCheck(char, part)
+	local function canSee(char, part)
 		if not aim_WC then return true end
-		local origin = cam.CFrame.Position
-		local direction = (part.Position - origin)
-	
 		local params = RaycastParams.new()
 		params.FilterType = Enum.RaycastFilterType.Exclude
 		params.FilterDescendantsInstances = {lp.Character, cam}
-	
-		local result = workspace:Raycast(origin, direction, params)
+		local result = workspace:Raycast(cam.CFrame.Position, (part.Position - cam.CFrame.Position), params)
 		return result == nil or result.Instance:IsDescendantOf(char)
 	end
 	
-	local function isTargetValid(part)
-		if not part or not part.Parent then return false end
-	
-		local char = part.Parent
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		local plr = Players:GetPlayerFromCharacter(char)
-	
-		if not hum or hum.Health <= 0 then return false end
-		if plr and isTeammate(plr) then return false end
-		if aim_WC and not wallCheck(char, part) then return false end
-	
-		return true
-	end
-	
 	local function getTarget()
+		if not aim_On then return nil end
 		local closestDist = FOV_RADIUS
 		local closestPart = nil
-	
-		local viewport = cam.ViewportSize
-		local center = Vector2.new(viewport.X / 2, viewport.Y / 2)
+		local center = cam.ViewportSize / 2
 	
 		for _, plr in ipairs(Players:GetPlayers()) do
-			if plr == lp or isTeammate(plr) then continue end
-	
+			if plr == lp or (aim_TC and plr.Team == lp.Team) then continue end
 			local char = plr.Character
 			local part = char and char:FindFirstChild(TARGET_PART)
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
 	
-			if not part or not hum or hum.Health <= 0 then continue end
-	
-			local screenPos, onScreen = cam:WorldToViewportPoint(part.Position)
-			if not onScreen then continue end
-	
-			local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-	
-			if dist < closestDist and wallCheck(char, part) then
-				closestDist = dist
-				closestPart = part
+			if part and hum and hum.Health > 0 then
+				local screenPos, onScreen = cam:WorldToViewportPoint(part.Position)
+				if onScreen then
+					local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+					if dist < closestDist and canSee(char, part) then
+						closestDist = dist
+						closestPart = part
+					end
+				end
 			end
 		end
-	
 		return closestPart
 	end
 	
 	---------------------------------------------------
-	-- INPUT + LOOP
+	-- CONNECTIONS
 	---------------------------------------------------
-	UIS.InputBegan:Connect(function(input, gpe)
-		if not gpe and input.UserInputType == Enum.UserInputType.MouseButton2 then
-			aiming = true
+	aimBtn.MouseButton1Click:Connect(function()
+		aim_On = not aim_On
+		SettingsManager.set("aimbot", aim_On)
+		updateAimBtn()
+	end)
+	
+	teamBtn.MouseButton1Click:Connect(function()
+		aim_TC = not aim_TC
+		SettingsManager.set("aimbotTeamCheck", aim_TC)
+		updateTeamBtn()
+	end)
+	
+	wallBtn.MouseButton1Click:Connect(function()
+		aim_WC = not aim_WC
+		SettingsManager.set("aimbotWallCheck", aim_WC)
+		updateWallBtn()
+	end)
+	
+	shwfvrad.MouseButton1Click:Connect(function()
+		showFOV = not showFOV
+		SettingsManager.set("aimbotShowFOV", showFOV)
+		updateFovUI()
+	end)
+	
+	rnbwBtn.MouseButton1Click:Connect(function()
+		rainbow = not rainbow
+		SettingsManager.set("aimbotRGB", rainbow)
+		updateRnbwBtn()
+	end)
+	
+	radiustxtbox.FocusLost:Connect(function()
+		local num = tonumber(radiustxtbox.Text)
+		if num then
+			FOV_RADIUS = math.clamp(num, 1, 5000)
+			SettingsManager.set("aimbotFOVRadius", FOV_RADIUS)
+			updateFovUI()
 		end
 	end)
 	
-	UIS.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton2 then
-			aiming = false
-			lockedTarget = nil
-		end
-	end)
+	UIS.InputBegan:Connect(function(i, g) if not g and i.UserInputType == Enum.UserInputType.MouseButton2 then aiming = true end end)
+	UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton2 then aiming = false lockedTarget = nil end end)
 	
+	---------------------------------------------------
+	-- MAIN LOOP
+	---------------------------------------------------
 	RS.RenderStepped:Connect(function()
-		updateFOVCircle()
+		updateVisuals()
 	
-		if not aim_On or not aiming then return end
-	
-		if lockedTarget and not isTargetValid(lockedTarget) then
+		if not aim_On or not aiming then
 			lockedTarget = nil
+			return
+		end
+	
+		if lockedTarget then
+			local char = lockedTarget.Parent
+			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			local plr = Players:GetPlayerFromCharacter(char)
+			if not hum or hum.Health <= 0 or (aim_TC and plr.Team == lp.Team) or not canSee(char, lockedTarget) then
+				lockedTarget = nil
+			end
 		end
 	
 		if not lockedTarget then
