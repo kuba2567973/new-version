@@ -7148,10 +7148,10 @@ local script = G2L["81"];
 	local camera = workspace.CurrentCamera
 	
 	local gui = script.Parent.Parent
-	
-	local flyButton   = script.Parent                    
+	local flyButton   = script.Parent                     
 	local speedInput  = gui:WaitForChild("FlSped")
 	
+	-- Speed Buttons
 	local btn1 = gui:WaitForChild("fl1")
 	local btn2 = gui:WaitForChild("fl2")
 	local btn3 = gui:WaitForChild("fl3")
@@ -7164,9 +7164,56 @@ local script = G2L["81"];
 	local flyActive = false
 	local bodyVelocity = nil
 	local animConnection = nil
-	local flyConnection = nil
 	
-	-- Animation control
+	-- CUSTOM ANIMATIONS
+	local anim1 = Instance.new("Animation")
+	anim1.AnimationId = "rbxassetid://126008799475693" 
+	
+	local anim2 = Instance.new("Animation")
+	anim2.AnimationId = "rbxassetid://126008799475693" 
+	
+	local anim3 = Instance.new("Animation")
+	anim3.AnimationId = "rbxassetid://126008799475693" 
+	
+	local currentAnimTrack = nil
+	
+	-- Function to handle the speed-based animations
+	local function updateFlyAnimation(speed)
+		local char = player.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if not hum then return end
+	
+		local selectedAnim = nil
+	
+		if speed > 0 then
+			if speed < 50 then
+				selectedAnim = anim1
+			elseif speed >= 50 and speed <= 250 then
+				selectedAnim = anim2
+			elseif speed >= 300 and speed <= 500 then
+				selectedAnim = anim3
+			end
+		end
+	
+		if selectedAnim then
+			if not currentAnimTrack or currentAnimTrack.Animation ~= selectedAnim then
+				if currentAnimTrack then currentAnimTrack:Stop() end
+				currentAnimTrack = hum:LoadAnimation(selectedAnim)
+				currentAnimTrack.Priority = Enum.AnimationPriority.Action 
+				currentAnimTrack.Looped = true
+				currentAnimTrack:Play()
+			end
+		end
+	end
+	
+	local function stopCustomAnim()
+		if currentAnimTrack then
+			currentAnimTrack:Stop()
+			currentAnimTrack = nil
+		end
+	end
+	
+	-- Animation control: Blocks default anims but ALLOWS your custom ones
 	local function setAnims(state)
 		local char = player.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -7174,12 +7221,18 @@ local script = G2L["81"];
 	
 		if state == false then
 			for _, track in pairs(hum:GetPlayingAnimationTracks()) do track:Stop() end
+	
 			if not animConnection then
-				animConnection = hum.AnimationPlayed:Connect(function(track) track:Stop() end)
+				animConnection = hum.AnimationPlayed:Connect(function(track)
+					if track.Animation ~= anim1 and track.Animation ~= anim2 and track.Animation ~= anim3 then
+						track:Stop()
+					end
+				end)
 			end
 		elseif animConnection then
 			animConnection:Disconnect()
 			animConnection = nil
+			stopCustomAnim()
 		end
 	end
 	
@@ -7191,7 +7244,6 @@ local script = G2L["81"];
 		if not hum or not root then return end
 	
 		if flyActive then
-			-- START FLYING
 			if not hum.SeatPart then
 				setAnims(false)
 				hum.PlatformStand = true
@@ -7204,39 +7256,39 @@ local script = G2L["81"];
 			bodyVelocity.Velocity = Vector3.new(0, 0, 0)
 			bodyVelocity.Parent = root
 	
-			-- Bind to RenderStep
 			RunService:BindToRenderStep("FlyLoop", Enum.RenderPriority.Camera.Value, function()
 				if not bodyVelocity or not bodyVelocity.Parent then return end
-	
-				if UIS:GetFocusedTextBox() then 
-					bodyVelocity.Velocity = Vector3.new(0,0,0) 
-					return 
-				end
+				if UIS:GetFocusedTextBox() then bodyVelocity.Velocity = Vector3.new(0,0,0) return end
 	
 				local currentSpeed = tonumber(speedInput.Text) or 60
-	
 				local direction = Vector3.new(0, 0, 0)
+	
+				-- Movement
 				if UIS:IsKeyDown(Enum.KeyCode.W) then direction += camera.CFrame.LookVector end
 				if UIS:IsKeyDown(Enum.KeyCode.S) then direction -= camera.CFrame.LookVector end
 				if UIS:IsKeyDown(Enum.KeyCode.A) then direction -= camera.CFrame.RightVector end
 				if UIS:IsKeyDown(Enum.KeyCode.D) then direction += camera.CFrame.RightVector end
 				if UIS:IsKeyDown(Enum.KeyCode.Space) then direction += Vector3.new(0, 1, 0) end
-				if UIS:IsKeyDown(Enum.KeyCode.Q) then direction -= Vector3.new(0, 1, 0) end
+	
+				-- LEFT CTRL: Go Down
+				if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then 
+					direction -= Vector3.new(0, 1, 0) 
+				end
+	
+				-- Q KEY: Only triggers the animation
+				if UIS:IsKeyDown(Enum.KeyCode.Q) then 
+					updateFlyAnimation(currentSpeed)
+				else
+					stopCustomAnim()
+				end
 	
 				root.RotVelocity = Vector3.new(0, 0, 0)
 				bodyVelocity.Velocity = direction.Magnitude > 0 and (direction.Unit * currentSpeed) or Vector3.new(0,0,0)
-	
 				root.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector)
 			end)
-	
 		else
-			-- STOP FLYING
 			RunService:UnbindFromRenderStep("FlyLoop")
-	
-			if bodyVelocity then
-				bodyVelocity:Destroy()
-				bodyVelocity = nil
-			end
+			if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
 	
 			if hum.SeatPart then
 				hum.PlatformStand = false
@@ -7247,7 +7299,6 @@ local script = G2L["81"];
 				hum:ChangeState(Enum.HumanoidStateType.GettingUp)
 				task.wait(0.05)
 				hum:ChangeState(Enum.HumanoidStateType.Running)
-	
 				hum.Jump = true
 				task.wait(0.03)
 				hum.Jump = false
@@ -7256,14 +7307,10 @@ local script = G2L["81"];
 	end
 	
 	-----------------------------------
-	-- BUTTONS
+	-- BUTTONS & INPUT
 	-----------------------------------
 	local function setFlySpeedFromButton(btn)
-		if btn.Text and tonumber(btn.Text) then
-			speedInput.Text = btn.Text
-		else
-			speedInput.Text = "60"
-		end
+		speedInput.Text = (btn.Text and tonumber(btn.Text)) and btn.Text or "60"
 	end
 	
 	btn1.MouseButton1Click:Connect(function() setFlySpeedFromButton(btn1) end)
@@ -7275,11 +7322,7 @@ local script = G2L["81"];
 	
 	btn5.MouseButton1Click:Connect(function()
 		local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-		if hum then
-			speedInput.Text = tostring(math.floor(hum.WalkSpeed))
-		else
-			speedInput.Text = "16"
-		end
+		speedInput.Text = hum and tostring(math.floor(hum.WalkSpeed)) or "16"
 	end)
 	
 	flyButton.MouseButton1Click:Connect(function()
@@ -7295,17 +7338,10 @@ local script = G2L["81"];
 		end
 	end)
 	
-	-----------------------------------
-	-- RESPAWN LOGIC
-	-----------------------------------
 	player.CharacterAdded:Connect(function()
 		flyActive = false 
 		RunService:UnbindFromRenderStep("FlyLoop")
-	
-		if bodyVelocity then
-			bodyVelocity:Destroy()
-			bodyVelocity = nil
-		end
+		if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
 	end)
 end;
 task.spawn(C_81);
