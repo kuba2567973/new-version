@@ -1089,7 +1089,6 @@ G2L["6b"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl
 G2L["6c"] = Instance.new("Frame", G2L["15"]);
-G2L["6c"]["Visible"] = false;
 G2L["6c"]["ZIndex"] = 10;
 G2L["6c"]["BorderSizePixel"] = 0;
 G2L["6c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
@@ -1833,7 +1832,7 @@ G2L["bc"]["Size"] = UDim2.new(0.101, 0, 0.049, 0);
 G2L["bc"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["bc"]["Text"] = [[SpinSpeed]];
 G2L["bc"]["Name"] = [[spnn]];
-G2L["bc"]["Position"] = UDim2.new(0.4419, 0, 0.47715, 0);
+G2L["bc"]["Position"] = UDim2.new(0.44033, 0, 0.49514, 0);
 
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.startspnnospn
@@ -3926,6 +3925,7 @@ G2L["1a1"]["CornerRadius"] = UDim.new(0.02, 0);
 
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Rg
 G2L["1a2"] = Instance.new("Frame", G2L["15"]);
+G2L["1a2"]["Visible"] = false;
 G2L["1a2"]["ZIndex"] = 10;
 G2L["1a2"]["BorderSizePixel"] = 0;
 G2L["1a2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
@@ -7139,8 +7139,6 @@ task.spawn(C_7d);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.fl.LocalScript
 local function C_81()
 local script = G2L["81"];
-	-- Superman Fly System (NO ANIMATIONS VERSION)
-	
 	local UIS = game:GetService("UserInputService")
 	local RunService = game:GetService("RunService")
 	local Players = game:GetService("Players")
@@ -7148,190 +7146,122 @@ local script = G2L["81"];
 	local player = Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 	
-	-- UI
+	-- GUI Paths
 	local gui = script.Parent.Parent
-	local flyButton = script.Parent
+	local flyButton = script.Parent                     
 	local speedInput = gui:WaitForChild("FlSped")
+	local btn1, btn2, btn3, btn4, btn5, btn6, btn7 = gui:WaitForChild("fl1"), gui:WaitForChild("fl2"), gui:WaitForChild("fl3"), gui:WaitForChild("fl4"), gui:WaitForChild("fl5"), gui:WaitForChild("fl6"), gui:WaitForChild("fl7")
 	
-	local btn1 = gui:WaitForChild("fl1")
-	local btn2 = gui:WaitForChild("fl2")
-	local btn3 = gui:WaitForChild("fl3")
-	local btn4 = gui:WaitForChild("fl4")
-	local btn5 = gui:WaitForChild("fl5")
-	local btn6 = gui:WaitForChild("fl6")
-	local btn7 = gui:WaitForChild("fl7")
+	local flyArmed = false 
+	local isFlying = false 
+	local bv, bg = nil, nil
+	local currentTarget = nil
 	
-	local flying = false
-	local animateBackup = nil
+	local function stopFlying()
+		isFlying = false
+		RunService:UnbindFromRenderStep("UniversalFly")
+		if bv then bv:Destroy() bv = nil end
+		if bg then bg:Destroy() bg = nil end
+		currentTarget = nil
 	
-	-----------------------------------
-	-- SPEED SYSTEM (TEXT BASED)
-	-----------------------------------
-	local function setSpeed(value)
-		speedInput.Text = tostring(math.clamp(value, 0, math.huge))
-	end
-	
-	local function hookButton(btn)
-		btn.MouseButton1Click:Connect(function()
-			local n = tonumber(btn.Text)
-			if n then
-				setSpeed(n)
-			end
-		end)
-	end
-	
-	hookButton(btn1)
-	hookButton(btn2)
-	hookButton(btn3)
-	hookButton(btn4)
-	hookButton(btn6)
-	hookButton(btn7)
-	
-	btn5.MouseButton1Click:Connect(function()
 		local char = player.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		setSpeed(hum and math.floor(hum.WalkSpeed) or 16)
-	end)
-	
-	-----------------------------------
-	-- ANIMATION KILL SYSTEM
-	-----------------------------------
-	local function disableAnimations(char)
-		local animate = char:FindFirstChild("Animate")
-		if animate then
-			animateBackup = animate:Clone()
-			animate.Disabled = true
-		end
-	
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		if hum then
-			for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-				track:Stop(0)
-			end
+		if hum and not hum.SeatPart then
+			hum.PlatformStand = false
+			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
 		end
 	end
 	
-	local function restoreAnimations(char)
-		local animate = char:FindFirstChild("Animate")
-		if animateBackup and animate then
-			animate:Destroy()
-			local newAnim = animateBackup:Clone()
-			newAnim.Parent = char
-		end
-	end
-	
-	-----------------------------------
-	-- FLY SYSTEM
-	-----------------------------------
-	local function startFly()
-		flying = true
-		flyButton.Text = "Fly-ON"
-	
+	local function startFlying()
 		local char = player.Character
-		if not char then return end
+		local root = char and char:FindFirstChild("HumanoidRootPart")
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if not root or not hum then return end
 	
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if not hum or not root then return end
+		isFlying = true
+		currentTarget = hum.SeatPart or root
 	
-		-- 🔥 KILL ALL ANIMATIONS
-		disableAnimations(char)
-	
-		-- physics mode (keeps tools usable)
-		hum:ChangeState(Enum.HumanoidStateType.Physics)
-	
-		local bv = Instance.new("BodyVelocity")
+		bv = Instance.new("BodyVelocity")
 		bv.MaxForce = Vector3.new(1,1,1) * math.huge
-		bv.Parent = root
+		bv.Parent = currentTarget
 	
-		local bg = Instance.new("BodyGyro")
+		bg = Instance.new("BodyGyro")
 		bg.MaxTorque = Vector3.new(1,1,1) * math.huge
-		bg.P = 10000
-		bg.Parent = root
+		bg.P = 3000
+		bg.D = 500
+		bg.Parent = currentTarget
 	
-		RunService:BindToRenderStep("SuperFly", 200, function()
-			if not flying then return end
-	
+		RunService:BindToRenderStep("UniversalFly", 200, function()
 			local speed = tonumber(speedInput.Text) or 60
-			local dir = Vector3.zero
+			local dir = Vector3.new(0,0,0)
 	
-			if UIS:IsKeyDown(Enum.KeyCode.W) then dir += camera.CFrame.LookVector end
-			if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= camera.CFrame.LookVector end
-			if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= camera.CFrame.RightVector end
-			if UIS:IsKeyDown(Enum.KeyCode.D) then dir += camera.CFrame.RightVector end
-			if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
-			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
-	
-			-- SUPERMAN POSE (Q = full 90°)
-			local tiltCFrame
-			if UIS:IsKeyDown(Enum.KeyCode.Q) then
-				tiltCFrame = CFrame.Angles(math.rad(-90), 0, 0)
-			else
-				tiltCFrame = CFrame.new()
+			-- AUTO-SWITCH: If you jump out of a car, move fly forces to YOU
+			if hum.SeatPart == nil and currentTarget ~= root then
+				bv.Parent = root
+				bg.Parent = root
+				currentTarget = root
 			end
 	
-			bg.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector) * tiltCFrame
+			if not UIS:GetFocusedTextBox() then
+				if UIS:IsKeyDown(Enum.KeyCode.W) then dir += camera.CFrame.LookVector end
+				if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= camera.CFrame.LookVector end
+				if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= camera.CFrame.RightVector end
+				if UIS:IsKeyDown(Enum.KeyCode.D) then dir += camera.CFrame.RightVector end
+				if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+				if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
+			end
 	
-			if dir.Magnitude > 0 then
-				bv.Velocity = dir.Unit * speed
+			bv.Velocity = dir.Magnitude > 0 and (dir.Unit * speed) or Vector3.new(0,0,0)
+	
+			-- Q-TILT LOGIC (Fixed for First Person)
+			if UIS:IsKeyDown(Enum.KeyCode.Q) then
+				bg.CFrame = camera.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
 			else
-				bv.Velocity = Vector3.zero
+				bg.CFrame = camera.CFrame
+			end
+	
+			if not hum.SeatPart then
+				hum.PlatformStand = true
 			end
 		end)
 	end
 	
-	-----------------------------------
-	-- STOP FLY
-	-----------------------------------
-	local function stopFly()
-		flying = false
-		RunService:UnbindFromRenderStep("SuperFly")
+	-- Main Button: Starts flight immediately and arms the Alt toggle
+	flyButton.MouseButton1Click:Connect(function()
+		flyArmed = true -- Permanently arm the Alt toggle once clicked
+		if isFlying then
+			stopFlying()
+			flyButton.Text = "Fly-OFF"
+		else
+			startFlying()
+			flyButton.Text = "Fly-ON"
+		end
+	end)
 	
-		local char = player.Character
-		if not char then return end
-	
-		local root = char:FindFirstChild("HumanoidRootPart")
-		local hum = char:FindFirstChildOfClass("Humanoid")
-	
-		if root then
-			for _, v in pairs(root:GetChildren()) do
-				if v:IsA("BodyVelocity") or v:IsA("BodyGyro") then
-					v:Destroy()
-				end
+	-- Alt Toggle: Only works after the button has been clicked at least once
+	UIS.InputBegan:Connect(function(input, p)
+		if not p and input.KeyCode == Enum.KeyCode.LeftAlt and flyArmed then
+			if isFlying then 
+				stopFlying() 
+				flyButton.Text = "Fly-OFF"
+			else 
+				startFlying() 
+				flyButton.Text = "Fly-ON"
 			end
 		end
+	end)
 	
-		-- restore animations
-		if char then
-			local animate = char:FindFirstChild("Animate")
-			if animate then animate.Disabled = false end
-		end
-	
-		if hum then
-			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-		end
-	
-		flyButton.Text = "Fly-OFF"
-	end
-	
-	-----------------------------------
-	-- TOGGLE
-	-----------------------------------
-	local function toggle()
-		if flying then
-			stopFly()
-		else
-			startFly()
-		end
-	end
-	
-	flyButton.MouseButton1Click:Connect(toggle)
-	
-	UIS.InputBegan:Connect(function(input, processed)
-		if processed then return end
-		if input.KeyCode == Enum.KeyCode.LeftAlt then
-			toggle()
-		end
+	-- Speed Buttons
+	local function setSpeed(btn) speedInput.Text = btn.Text end
+	btn1.MouseButton1Click:Connect(function() setSpeed(btn1) end)
+	btn2.MouseButton1Click:Connect(function() setSpeed(btn2) end)
+	btn3.MouseButton1Click:Connect(function() setSpeed(btn3) end)
+	btn4.MouseButton1Click:Connect(function() setSpeed(btn4) end)
+	btn6.MouseButton1Click:Connect(function() setSpeed(btn6) end)
+	btn7.MouseButton1Click:Connect(function() setSpeed(btn7) end)
+	btn5.MouseButton1Click:Connect(function() 
+		local h = player.Character:FindFirstChild("Humanoid")
+		speedInput.Text = h and tostring(math.floor(h.WalkSpeed)) or "16"
 	end)
 end;
 task.spawn(C_81);
