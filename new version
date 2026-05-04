@@ -7139,7 +7139,8 @@ task.spawn(C_7d);
 -- StarterGui.HHHHAAAACCCCKKKK.GUI.txbas.Pl.fl.LocalScript
 local function C_81()
 local script = G2L["81"];
-	-- Put this script directly INSIDE your main Fly button (LocalScript)
+	-- Superman Fly System (NO ANIMATIONS VERSION)
+	
 	local UIS = game:GetService("UserInputService")
 	local RunService = game:GetService("RunService")
 	local Players = game:GetService("Players")
@@ -7147,226 +7148,190 @@ local script = G2L["81"];
 	local player = Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 	
+	-- UI
 	local gui = script.Parent.Parent
-	local flyButton   = script.Parent                     
-	local speedInput  = gui:WaitForChild("FlSped")
+	local flyButton = script.Parent
+	local speedInput = gui:WaitForChild("FlSped")
 	
-	-- Speed Buttons
-	local btn1, btn2, btn3, btn4, btn5, btn6, btn7 = gui:WaitForChild("fl1"), gui:WaitForChild("fl2"), gui:WaitForChild("fl3"), gui:WaitForChild("fl4"), gui:WaitForChild("fl5"), gui:WaitForChild("fl6"), gui:WaitForChild("fl7")
+	local btn1 = gui:WaitForChild("fl1")
+	local btn2 = gui:WaitForChild("fl2")
+	local btn3 = gui:WaitForChild("fl3")
+	local btn4 = gui:WaitForChild("fl4")
+	local btn5 = gui:WaitForChild("fl5")
+	local btn6 = gui:WaitForChild("fl6")
+	local btn7 = gui:WaitForChild("fl7")
 	
 	local flying = false
-	local flyActive = false
-	local bodyVelocity, bodyGyro = nil, nil
-	local originalIds = {}
-	local loadedTracks = {}
-	local currentTrack = nil
+	local animateBackup = nil
 	
 	-----------------------------------
-	-- CONFIGURATION
+	-- SPEED SYSTEM (TEXT BASED)
 	-----------------------------------
-	local anims = {
-		IDLE_STILL    = "rbxassetid://128556177421965",
-		IDLE_MOVING   = "rbxassetid://137406800707930",
-		IDLE_BACKWARD = "rbxassetid://133116770748086", -- Updated with your ID!
-		FLY_LOW       = "rbxassetid://97234014660649",
-		FLY_MID       = "rbxassetid://72114828471022", 
-		FLY_HIGH      = "rbxassetid://96938802797088"  
-	}
+	local function setSpeed(value)
+		speedInput.Text = tostring(math.clamp(value, 0, math.huge))
+	end
 	
-	local PLAYBACK_SPEED = 0.25
-	local MOMENTUM_STRENGTH = 1.2
+	local function hookButton(btn)
+		btn.MouseButton1Click:Connect(function()
+			local n = tonumber(btn.Text)
+			if n then
+				setSpeed(n)
+			end
+		end)
+	end
 	
-	-----------------------------------
-	-- ANIMATION ENGINE
-	-----------------------------------
-	local function playDirectAnim(targetId)
+	hookButton(btn1)
+	hookButton(btn2)
+	hookButton(btn3)
+	hookButton(btn4)
+	hookButton(btn6)
+	hookButton(btn7)
+	
+	btn5.MouseButton1Click:Connect(function()
 		local char = player.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		if not hum then return end
-	
-		if not loadedTracks[targetId] then
-			local a = Instance.new("Animation")
-			a.AnimationId = targetId
-			loadedTracks[targetId] = hum:LoadAnimation(a)
-			loadedTracks[targetId].Priority = Enum.AnimationPriority.Action4
-			loadedTracks[targetId].Looped = true
-		end
-	
-		local track = loadedTracks[targetId]
-		if currentTrack ~= track then
-			if currentTrack then currentTrack:Stop(0.2) end
-			currentTrack = track
-			currentTrack:Play(0.2)
-		end
-		currentTrack:AdjustSpeed(PLAYBACK_SPEED)
-	end
-	
-	local function syncAnimsToOthers(targetId)
-		local char = player.Character
-		local animateScript = char and char:FindFirstChild("Animate")
-		if not animateScript then return end
-	
-		local statesToSwap = {"idle", "walk", "run", "jump", "fall"}
-		for _, name in pairs(statesToSwap) do
-			local folder = animateScript:FindFirstChild(name)
-			if folder then
-				local animObj = folder:FindFirstChildOfClass("Animation")
-				if animObj then
-					if not originalIds[name] then originalIds[name] = animObj.AnimationId end
-					animObj.AnimationId = targetId
-				end
-			end
-		end
-		playDirectAnim(targetId) 
-	end
-	
-	local function resetAnims()
-		local char = player.Character
-		local animateScript = char and char:FindFirstChild("Animate")
-		if currentTrack then currentTrack:Stop() currentTrack = nil end
-	
-		if animateScript then
-			for name, oldId in pairs(originalIds) do
-				local folder = animateScript:FindFirstChild(name)
-				if folder then
-					local animObj = folder:FindFirstChildOfClass("Animation")
-					if animObj then animObj.AnimationId = oldId end
-				end
-			end
-		end
-		originalIds = {}
-		loadedTracks = {}
-	end
-	
-	-----------------------------------
-	-- MOMENTUM LOGIC
-	-----------------------------------
-	local function applyMomentum(char, velocity)
-		local root = char:FindFirstChild("HumanoidRootPart")
-		local hum = char:FindFirstChild("Humanoid")
-		if not root or not hum then return end
-	
-		hum.PlatformStand = true
-		local attachment = Instance.new("Attachment", root)
-		local linearVelocity = Instance.new("LinearVelocity", attachment)
-	
-		linearVelocity.MaxForce = 200000
-		linearVelocity.VectorVelocity = velocity * MOMENTUM_STRENGTH
-		linearVelocity.Attachment0 = attachment
-	
-		task.wait(0.25)
-	
-		local tweenService = game:GetService("TweenService")
-		local info = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		local tween = tweenService:Create(linearVelocity, info, {VectorVelocity = Vector3.new(0,0,0)})
-		tween:Play()
-	
-		tween.Completed:Wait()
-	
-		linearVelocity:Destroy()
-		attachment:Destroy()
-		hum.PlatformStand = false
-		hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-	end
-	
-	-----------------------------------
-	-- FLY CORE
-	-----------------------------------
-	local function toggleFlyMode(state)
-		flyActive = state
-		local char = player.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		local root = char and char:FindFirstChild("HumanoidRootPart")
-		if not hum or not root then return end
-	
-		if flyActive then
-			hum.PlatformStand = true
-	
-			bodyVelocity = Instance.new("BodyVelocity")
-			bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-			bodyVelocity.Parent = root
-	
-			bodyGyro = Instance.new("BodyGyro")
-			bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-			bodyGyro.D, bodyGyro.P = 500, 3000
-			bodyGyro.Parent = root
-	
-			RunService:BindToRenderStep("FlyLoop", Enum.RenderPriority.Camera.Value, function()
-				if not bodyVelocity or not bodyVelocity.Parent then return end
-	
-				local currentSpeed = tonumber(speedInput.Text) or 60
-				local direction = Vector3.new(0, 0, 0)
-				local movingBack = false
-	
-				if not UIS:GetFocusedTextBox() then
-					if UIS:IsKeyDown(Enum.KeyCode.W) then direction += camera.CFrame.LookVector end
-					if UIS:IsKeyDown(Enum.KeyCode.S) then 
-						direction -= camera.CFrame.LookVector 
-						movingBack = true
-					end
-					if UIS:IsKeyDown(Enum.KeyCode.A) then direction -= camera.CFrame.RightVector end
-					if UIS:IsKeyDown(Enum.KeyCode.D) then direction += camera.CFrame.RightVector end
-					if UIS:IsKeyDown(Enum.KeyCode.Space) then direction += Vector3.new(0, 1, 0) end
-					if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then direction -= Vector3.new(0, 1, 0) end
-				end
-	
-				-- ANIMATION PICKER
-				if UIS:IsKeyDown(Enum.KeyCode.Q) then
-					if currentSpeed <= 50 then syncAnimsToOthers(anims.FLY_LOW)
-					elseif currentSpeed > 50 and currentSpeed <= 250 then syncAnimsToOthers(anims.FLY_MID)
-					elseif currentSpeed > 250 then syncAnimsToOthers(anims.FLY_HIGH) end
-				else
-					if movingBack then
-						syncAnimsToOthers(anims.IDLE_BACKWARD)
-					elseif direction.Magnitude > 0 then 
-						syncAnimsToOthers(anims.IDLE_MOVING)
-					else 
-						syncAnimsToOthers(anims.IDLE_STILL) 
-					end
-				end
-	
-				bodyVelocity.Velocity = direction.Magnitude > 0 and (direction.Unit * currentSpeed) or Vector3.new(0,0,0)
-				bodyGyro.CFrame = camera.CFrame
-				root.RotVelocity = Vector3.new(0,0,0)
-			end)
-		else
-			RunService:UnbindFromRenderStep("FlyLoop")
-	
-			if bodyVelocity and root then
-				local lastVel = bodyVelocity.Velocity
-				if lastVel.Magnitude > 5 then
-					task.spawn(function() applyMomentum(char, lastVel) end)
-				else
-					hum.PlatformStand = false
-					hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-				end
-			end
-	
-			if bodyVelocity then bodyVelocity:Destroy() end
-			if bodyGyro then bodyGyro:Destroy() end
-			resetAnims()
-		end
-	end
-	
-	-----------------------------------
-	-- BUTTONS
-	-----------------------------------
-	flyButton.MouseButton1Click:Connect(function()
-		flying = not flying
-		flyButton.Text = flying and "Fly-ON" or "Fly-OFF"
-		toggleFlyMode(flying)
+		setSpeed(hum and math.floor(hum.WalkSpeed) or 16)
 	end)
 	
-	local function setSpeed(btn) speedInput.Text = btn.Text end
-	btn1.MouseButton1Click:Connect(function() setSpeed(btn1) end)
-	btn2.MouseButton1Click:Connect(function() setSpeed(btn2) end)
-	btn3.MouseButton1Click:Connect(function() setSpeed(btn3) end)
-	btn4.MouseButton1Click:Connect(function() setSpeed(btn4) end)
-	btn6.MouseButton1Click:Connect(function() setSpeed(btn6) end)
-	btn7.MouseButton1Click:Connect(function() setSpeed(btn7) end)
-	btn5.MouseButton1Click:Connect(function() 
-		local h = player.Character:FindFirstChild("Humanoid")
-		speedInput.Text = h and tostring(math.floor(h.WalkSpeed)) or "16"
+	-----------------------------------
+	-- ANIMATION KILL SYSTEM
+	-----------------------------------
+	local function disableAnimations(char)
+		local animate = char:FindFirstChild("Animate")
+		if animate then
+			animateBackup = animate:Clone()
+			animate.Disabled = true
+		end
+	
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+				track:Stop(0)
+			end
+		end
+	end
+	
+	local function restoreAnimations(char)
+		local animate = char:FindFirstChild("Animate")
+		if animateBackup and animate then
+			animate:Destroy()
+			local newAnim = animateBackup:Clone()
+			newAnim.Parent = char
+		end
+	end
+	
+	-----------------------------------
+	-- FLY SYSTEM
+	-----------------------------------
+	local function startFly()
+		flying = true
+		flyButton.Text = "Fly-ON"
+	
+		local char = player.Character
+		if not char then return end
+	
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if not hum or not root then return end
+	
+		-- 🔥 KILL ALL ANIMATIONS
+		disableAnimations(char)
+	
+		-- physics mode (keeps tools usable)
+		hum:ChangeState(Enum.HumanoidStateType.Physics)
+	
+		local bv = Instance.new("BodyVelocity")
+		bv.MaxForce = Vector3.new(1,1,1) * math.huge
+		bv.Parent = root
+	
+		local bg = Instance.new("BodyGyro")
+		bg.MaxTorque = Vector3.new(1,1,1) * math.huge
+		bg.P = 10000
+		bg.Parent = root
+	
+		RunService:BindToRenderStep("SuperFly", 200, function()
+			if not flying then return end
+	
+			local speed = tonumber(speedInput.Text) or 60
+			local dir = Vector3.zero
+	
+			if UIS:IsKeyDown(Enum.KeyCode.W) then dir += camera.CFrame.LookVector end
+			if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= camera.CFrame.LookVector end
+			if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= camera.CFrame.RightVector end
+			if UIS:IsKeyDown(Enum.KeyCode.D) then dir += camera.CFrame.RightVector end
+			if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
+	
+			-- SUPERMAN POSE (Q = full 90°)
+			local tiltCFrame
+			if UIS:IsKeyDown(Enum.KeyCode.Q) then
+				tiltCFrame = CFrame.Angles(math.rad(-90), 0, 0)
+			else
+				tiltCFrame = CFrame.new()
+			end
+	
+			bg.CFrame = CFrame.new(root.Position, root.Position + camera.CFrame.LookVector) * tiltCFrame
+	
+			if dir.Magnitude > 0 then
+				bv.Velocity = dir.Unit * speed
+			else
+				bv.Velocity = Vector3.zero
+			end
+		end)
+	end
+	
+	-----------------------------------
+	-- STOP FLY
+	-----------------------------------
+	local function stopFly()
+		flying = false
+		RunService:UnbindFromRenderStep("SuperFly")
+	
+		local char = player.Character
+		if not char then return end
+	
+		local root = char:FindFirstChild("HumanoidRootPart")
+		local hum = char:FindFirstChildOfClass("Humanoid")
+	
+		if root then
+			for _, v in pairs(root:GetChildren()) do
+				if v:IsA("BodyVelocity") or v:IsA("BodyGyro") then
+					v:Destroy()
+				end
+			end
+		end
+	
+		-- restore animations
+		if char then
+			local animate = char:FindFirstChild("Animate")
+			if animate then animate.Disabled = false end
+		end
+	
+		if hum then
+			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+		end
+	
+		flyButton.Text = "Fly-OFF"
+	end
+	
+	-----------------------------------
+	-- TOGGLE
+	-----------------------------------
+	local function toggle()
+		if flying then
+			stopFly()
+		else
+			startFly()
+		end
+	end
+	
+	flyButton.MouseButton1Click:Connect(toggle)
+	
+	UIS.InputBegan:Connect(function(input, processed)
+		if processed then return end
+		if input.KeyCode == Enum.KeyCode.LeftAlt then
+			toggle()
+		end
 	end)
 end;
 task.spawn(C_81);
